@@ -1,0 +1,1341 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>El Día de Gluco</title>
+<meta name="description" content="Juego educativo e interactivo sobre diabetes tipo 1 para niñas y niños: cuidá a Gluco durante un día, de 8 a 20 horas.">
+<meta name="theme-color" content="#EAF1FF">
+<meta property="og:title" content="El Día de Gluco">
+<meta property="og:description" content="Juego educativo e interactivo sobre diabetes tipo 1 para niñas y niños: cuidá a Gluco durante un día, de 8 a 20 horas.">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<style>/* Layout: una columna. Arriba el título y el reloj, en el medio Gluco con su medidor de glucosa al costado,
+   abajo una bandeja de comidas que se desliza y tres cosas siempre a mano. Un solo mensaje de Gluco dice qué hacer. */
+:root{
+  --bg:#EAF1FF; --card:#FFFFFF; --ink:#16204A; --muted:#4F5A86; --line:#16204A;
+  --blue:#2F6BFF; --blue-ink:#FFFFFF; --blue-soft:#DCE7FF;
+  --ok:#12975F; --ok-soft:#D4F4E4;
+  --high:#E08700; --high-soft:#FFE9C2;
+  --low:#D6364B; --low-soft:#FFD9DE;
+  --gluco:#7DB5FF; --face:#10173B; --cheek:#FF9DB0;
+  --sun:#FFC93C; --sun-ink:#16204A; --late:#7C5CE6;
+  --wall:#D3E2FF; --floor:#A9C3F5;
+  --font-display:'Fredoka',ui-rounded,system-ui,sans-serif;
+  --font-body:'Nunito',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1233; --card:#182050; --ink:#EEF1FF; --muted:#AAB4E6; --line:#050819;
+    --blue:#6E9BFF; --blue-ink:#0A0F2C; --blue-soft:#243069;
+    --ok:#38D39B; --ok-soft:#13453A;
+    --high:#FFB547; --high-soft:#4B3711;
+    --low:#FF6F83; --low-soft:#522033;
+    --wall:#1F2A63; --floor:#161E4D; --late:#A58BFF;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1233; --card:#182050; --ink:#EEF1FF; --muted:#AAB4E6; --line:#050819;
+  --blue:#6E9BFF; --blue-ink:#0A0F2C; --blue-soft:#243069;
+  --ok:#38D39B; --ok-soft:#13453A;
+  --high:#FFB547; --high-soft:#4B3711;
+  --low:#FF6F83; --low-soft:#522033;
+  --wall:#1F2A63; --floor:#161E4D; --late:#A58BFF;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:18px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 36px}
+h1,h2,h3{font-family:var(--font-display);line-height:1.15;margin:0;text-wrap:balance}
+p{margin:0}
+button,input{font-family:inherit;color:inherit}
+button:focus-visible,input:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.app{max-width:1200px;margin:0 auto;display:grid;gap:14px}
+
+.hud{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.brand{font:700 1.4rem var(--font-display)}
+.chips{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border:2.5px solid var(--line);border-radius:999px;background:var(--card);font:600 1rem var(--font-display);white-space:nowrap}
+.chip[hidden]{display:none}
+.chip.clock{background:var(--sun);color:var(--sun-ink);font-size:1.15rem}
+.chip.green{background:var(--ok-soft)}
+button.chip{cursor:pointer}
+button.chip[aria-pressed="true"]{background:var(--sun);color:var(--sun-ink)}
+
+.stage{position:relative;display:grid;grid-template-columns:92px 1fr;gap:8px;min-height:clamp(470px,66vh,820px);border:3px solid var(--line);border-radius:24px;box-shadow:0 5px 0 var(--line);background:linear-gradient(var(--wall) 0 74%,var(--floor) 74% 100%);overflow:hidden;padding:12px 12px 14px}
+.gauge{position:relative;display:grid;grid-template-rows:auto 1fr auto;justify-items:center;gap:6px}
+.gauge h3{font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:center}
+.tube{position:relative;width:36px;height:100%;min-height:clamp(190px,34vh,300px);border:3px solid var(--line);border-radius:18px;background:linear-gradient(to top,var(--low-soft) 0 11.5%,var(--ok-soft) 11.5% 53.8%,var(--high-soft) 53.8% 100%);box-shadow:inset 0 0 0 2px var(--card)}
+.tube i{position:absolute;left:46px;font:800 .78rem var(--font-body);font-style:normal;color:var(--ink);transform:translateY(50%);white-space:nowrap}
+.tube i.t70{bottom:11.5%}
+.tube i.t180{bottom:53.8%}
+.tube i::before{content:"";position:absolute;right:calc(100% + 4px);top:50%;width:9px;border-top:2px dashed var(--muted)}
+.marker{position:absolute;left:50%;width:34px;height:34px;border-radius:50%;transform:translate(-50%,50%);border:3px solid var(--line);transition:bottom .35s ease-out,background .3s;background:var(--ok)}
+.marker.z-high{background:var(--high)}
+.marker.z-low{background:var(--low)}
+.readout{text-align:center}
+.readout b{display:block;font:700 1.9rem/1 var(--font-display)}
+.readout small{display:block;font:700 .75rem/1.2 var(--font-body);color:var(--muted)}
+.readout.z-low b{color:var(--low)}
+.readout.z-high b{color:var(--high)}
+.readout.z-ok b{color:var(--ok)}
+
+.center{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:8px;min-width:0}
+.say{position:relative;margin-bottom:10px;min-height:clamp(64px,13vh,96px);width:100%;max-width:520px;display:flex;align-items:center;justify-content:center;text-align:center;background:var(--card);border:3px solid var(--line);border-radius:18px;padding:12px 16px;font-weight:800;font-size:1.08rem;line-height:1.35}
+.say::after{content:"";position:absolute;left:50%;bottom:-11px;width:16px;height:16px;background:var(--card);border-right:3px solid var(--line);border-bottom:3px solid var(--line);transform:translateX(-50%) rotate(45deg)}
+.say.pop{animation:sayPop .25s ease-out}
+.glwrap{position:relative;width:min(clamp(230px,36vh,400px),100%);touch-action:manipulation}
+.glwrap svg{display:block;width:100%;height:auto;overflow:visible;cursor:pointer}
+.glwrap.hover,.glwrap.need{background:radial-gradient(closest-side,rgba(255,201,60,.55),transparent 78%)}
+.ball{position:absolute;right:-18px;bottom:6%;font-size:2.4rem;display:none;pointer-events:none}
+.glwrap.playing .ball{display:block;animation:bounce .55s ease-in infinite alternate}
+.fx{position:absolute;pointer-events:none;font-size:1.9rem;animation:floatUp 1.1s ease-out forwards;z-index:3}
+
+.sky{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden;border-radius:inherit}
+.tint{position:absolute;inset:0;background:rgb(255,170,90);opacity:0}
+.starfield{position:absolute;inset:0;opacity:0}
+.starfield i{position:absolute;font-style:normal;color:#fff;font-size:.8rem}
+.orb{position:absolute;left:8%;top:14px;font-size:2.2rem;line-height:1;transform:translateX(-50%)}
+.stage.ovl .say,.stage.ovl .thought{visibility:hidden}
+.thought{position:absolute;right:-4%;top:2%;min-width:56px;height:56px;padding:0 8px;border-radius:28px;background:var(--card);border:3px solid var(--line);display:grid;place-items:center;font-size:2rem;animation:tbob 1.4s ease-in-out infinite;pointer-events:none;z-index:2}
+.thought[hidden]{display:none}
+.thought::before{content:"";position:absolute;left:-2px;bottom:-14px;width:14px;height:14px;border-radius:50%;background:var(--card);border:3px solid var(--line)}
+.thought::after{content:"";position:absolute;left:-14px;bottom:-26px;width:8px;height:8px;border-radius:50%;background:var(--card);border:2.5px solid var(--line)}
+.door-frame{fill:var(--card);stroke:var(--line);stroke-width:3}
+.door-panel{fill:var(--low-soft);stroke:var(--line);stroke-width:2;transform-box:fill-box;transform-origin:left center;transition:transform .4s,fill .4s}
+.door-knob{fill:var(--line)}
+.gdot{fill:var(--sun);stroke:var(--line);stroke-width:1.5;display:none}
+.door.open .door-panel{fill:var(--ok);transform:scaleX(.22)}
+.door.open .gdot{display:block;animation:enter 1.2s linear infinite}
+.door.shut .door-panel{animation:doorglow 1s ease-in-out infinite alternate}
+.dtxt{font-size:12px;text-anchor:middle}
+.shadow{fill:var(--line);opacity:.18}
+.drop{fill:var(--gluco);stroke:var(--line);stroke-width:5;stroke-linejoin:round;transition:fill .4s}
+.m-high .drop{fill:#FFC27A}
+.m-low .drop{fill:#B9C7E6}
+.shine{fill:none;stroke:#fff;stroke-width:6;stroke-linecap:round;opacity:.7}
+.limb-o{fill:none;stroke:var(--line);stroke-width:15;stroke-linecap:round}
+.limb{fill:none;stroke:var(--gluco);stroke-width:8;stroke-linecap:round;transition:stroke .4s}
+.m-high .limb{stroke:#FFC27A}
+.m-low .limb{stroke:#B9C7E6}
+.foot{fill:var(--gluco);stroke:var(--line);stroke-width:4;transition:fill .4s}
+.m-high .foot{fill:#FFC27A}
+.m-low .foot{fill:#B9C7E6}
+.sclera{fill:#fff;stroke:var(--face);stroke-width:2.5}
+.pupil{fill:var(--face)}
+.gleam{fill:#fff}
+.cheek{fill:var(--cheek);opacity:.85}
+.mf{fill:none;stroke:var(--face);stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+.mf.fill{fill:var(--face)}
+.tongue{fill:var(--cheek)}
+.brow,.brow2{fill:none;stroke:var(--face);stroke-width:5;stroke-linecap:round;display:none}
+.tear{fill:#8FD0FF;stroke:var(--line);stroke-width:3;display:none}
+.sweat{fill:#fff;stroke:var(--line);stroke-width:3;display:none}
+.spark{fill:var(--sun);stroke:var(--line);stroke-width:2;stroke-linejoin:round;display:none}
+.zzz{font:700 26px var(--font-display);fill:var(--ink);display:none}
+.eye-arc{fill:none;stroke:var(--face);stroke-width:5;stroke-linecap:round;display:none}
+.mouth{display:none}
+.m-ok .mouth-ok,.m-happy .mouth-happy,.m-play .mouth-happy,.m-eat .mouth-open,.m-open .mouth-open,.m-low .mouth-low,.m-high .mouth-high,.m-sleep .mouth-sleep{display:block}
+.m-low .brow,.m-low .sweat,.m-high .sweat{display:block}
+.m-sad .mouth-low,.m-angry .mouth-low{display:block}
+.m-sad .brow,.m-sad .tear{display:block}
+.m-angry .brow2{display:block}
+.m-angry .cheek{fill:#FF6F83}
+.m-sad .rig{animation:breathe 3.2s ease-in-out infinite}
+.m-angry .rig{animation:fume .3s linear infinite}
+.m-sick .mouth-low,.m-sick .brow,.m-sick .sweat{display:block}
+.col{display:grid;gap:10px}
+.col .btn{justify-self:stretch;text-align:left}
+.readout .trend{font:900 2.8rem/1 var(--font-display);color:var(--ink);margin-top:4px}
+.readout .trendTxt{font-weight:800;font-size:.8rem;color:var(--ink)}
+.readout.tr-up .trend{color:var(--high)}.readout.tr-down .trend{color:var(--late)}.readout.tr-flat .trend{color:var(--ok)}
+.m-happy .spark,.m-play .spark{display:block}
+.m-happy .eyes,.m-play .eyes,.m-sleep .eyes{display:none}
+.m-happy .eye-happy,.m-play .eye-happy,.m-sleep .eye-sleep{display:block}
+.m-sleep .zzz{display:block;animation:zz 2.4s ease-in-out infinite}
+.rig,.eye,.arm,.zzz,.mouth-open{transform-box:fill-box}
+.rig{transform-origin:50% 100%;animation:bob 2.6s ease-in-out infinite}
+.eye{transform-origin:50% 50%;animation:blink 5s infinite}
+.arm{transform-origin:50% 0%}
+.arm-l{animation:armL 2.6s ease-in-out infinite}
+.arm-r{animation:armR 2.6s ease-in-out infinite}
+.mouth-open{transform-origin:50% 30%}
+.m-eat .rig{animation:chew .32s ease-in-out infinite alternate}
+.m-eat .mouth-open{animation:mouth .32s ease-in-out infinite alternate}
+.m-happy .rig,.m-play .rig{animation:hop .5s ease-out infinite}
+.m-happy .arm-l,.m-play .arm-l{animation:waveL .4s ease-in-out infinite alternate}
+.m-happy .arm-r,.m-play .arm-r{animation:waveR .4s ease-in-out infinite alternate}
+.m-low .rig{animation:shiver .1s linear infinite alternate}
+.m-high .rig{animation:sway 1.6s ease-in-out infinite}
+.m-sleep .rig{animation:breathe 3.2s ease-in-out infinite}
+.m-sleep .arm{animation:none}
+
+.tray{border:3px solid var(--line);border-radius:22px;background:var(--card);box-shadow:0 5px 0 var(--line);padding:14px;display:grid;gap:12px}
+.shelf h3{font-size:.85rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.strip{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px;align-items:center}
+.scroller{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x proximity;padding:8px 4px 12px;scrollbar-width:thin}
+.arrow{width:40px;height:60px;border:3px solid var(--line);border-radius:14px;background:var(--card);font:700 1.5rem var(--font-display);cursor:pointer;box-shadow:0 3px 0 var(--line)}
+.arrow:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.tools{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.item{position:relative;touch-action:none;user-select:none;-webkit-user-select:none;display:grid;justify-items:center;align-content:center;gap:2px;padding:8px 4px;min-height:100px;border:3px solid var(--line);border-radius:18px;background:var(--blue-soft);cursor:grab;box-shadow:0 4px 0 var(--line);transition:transform .08s}
+.scroller .item{flex:0 0 100px;scroll-snap-align:start;touch-action:pan-x}
+.item:hover{transform:translateY(-2px)}
+.item:active{cursor:grabbing}
+.item.tool{background:var(--ok-soft)}
+.item .em{font-size:2.4rem;line-height:1.15;height:2.8rem;display:grid;place-items:center}
+.item .lb{font:700 .82rem/1.15 var(--font-body);text-align:center}
+.dot{flex:none;width:12px;height:12px;border-radius:50%;border:2px solid var(--line);background:var(--ok);display:inline-block;vertical-align:-1px}
+.dot.g-med{background:var(--high);border-radius:3px}
+.dot.g-fast{background:var(--low);border-radius:2px;transform:rotate(45deg) scale(.9)}
+.dot.g-late{background:var(--late);box-shadow:inset 0 0 0 2px var(--card)}
+.dot.g-none{background:var(--card)}
+.item .dot{position:absolute;top:9px;left:9px}
+.legend2{white-space:nowrap}
+.fline{fill:none;stroke:var(--muted);stroke-width:3;stroke-dasharray:6 5;stroke-linecap:round}
+.menuwrap{position:relative}
+.menu{position:absolute;right:0;top:calc(100% + 8px);z-index:20;background:var(--card);border:3px solid var(--line);border-radius:16px;box-shadow:0 5px 0 var(--line);padding:8px;display:grid;gap:6px;min-width:220px}
+.menu[hidden]{display:none}
+.menuitem{font:600 1rem var(--font-display);text-align:left;padding:10px 12px;border:2.5px solid var(--line);border-radius:12px;background:var(--card);cursor:pointer}
+.menuitem[aria-pressed="true"]{background:var(--sun);color:var(--sun-ink)}
+.item.pulse{animation:wiggle .7s ease-in-out infinite;box-shadow:0 0 0 5px var(--sun),0 4px 0 var(--line)}
+.badge{position:absolute;top:-9px;right:-7px;min-width:26px;height:26px;border-radius:13px;background:var(--low);color:#fff;border:2.5px solid var(--line);font:700 .9rem/1 var(--font-display);display:none;place-items:center;padding:0 6px}
+.badge.on{display:grid}
+.mini{display:grid;gap:6px;width:100%;margin-top:8px;font-size:1.5rem;line-height:1}.mini span{display:flex;align-items:center;gap:6px;opacity:.55;transition:opacity .3s}.mini span.on{opacity:1}.mini i{flex:1;height:14px;border:2.5px solid var(--line);border-radius:8px;background:var(--card);position:relative;overflow:hidden}.mini i::after{content:"";position:absolute;inset:0;width:var(--w,0%);background:var(--high);transition:width .4s}.mini span+span i::after{background:var(--late)}
+.ghost{position:fixed;left:0;top:0;z-index:50;pointer-events:none;font-size:3.2rem;line-height:1;filter:drop-shadow(0 8px 4px rgba(0,0,0,.3));will-change:transform}
+.hint{font-size:.9rem;color:var(--muted);text-align:center}
+
+.overlay{position:absolute;inset:0;z-index:5;background:rgba(10,15,45,.55);display:flex;align-items:center;justify-content:center;padding:14px;overflow:auto}
+.overlay[hidden]{display:none}
+.ocard{background:var(--card);border:3px solid var(--line);border-radius:22px;box-shadow:0 5px 0 var(--line);padding:22px;display:grid;gap:14px;max-width:440px;width:100%;margin:auto}
+.ocard h2{font-size:1.7rem}
+.how{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.how li{display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:center}
+.how .n{width:44px;height:44px;border-radius:14px;background:var(--blue-soft);border:2.5px solid var(--line);display:grid;place-items:center;font-size:1.5rem}
+.field{display:grid;gap:6px}
+.field .lab{font:600 1rem var(--font-display)}
+input[type=text]{font:700 1.15rem var(--font-body);padding:10px 12px;border:3px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);width:100%}
+.swatches{display:flex;gap:12px;flex-wrap:wrap}
+.sw{width:44px;height:44px;border-radius:50%;border:3px solid var(--line);background:var(--c);cursor:pointer}
+.sw[aria-checked="true"]{box-shadow:0 0 0 4px var(--card),0 0 0 7px var(--line)}
+.btn{font:600 1.2rem var(--font-display);padding:14px 26px;border-radius:16px;border:3px solid var(--line);background:var(--blue);color:var(--blue-ink);box-shadow:0 4px 0 var(--line);cursor:pointer;justify-self:start;transition:transform .08s}
+.btn:hover{transform:translateY(-2px)}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.btn.sun{background:var(--sun);color:var(--sun-ink)}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.big{display:flex;align-items:center;justify-content:center;gap:8px;padding:18px 8px;border-radius:18px;border:3px solid var(--line);box-shadow:0 4px 0 var(--line);font:700 1.3rem var(--font-display);cursor:pointer;color:var(--ink)}
+.big:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.big.mito{background:var(--low-soft)}
+.big.real{background:var(--ok-soft)}
+.fb{border:3px solid var(--line);border-radius:18px;padding:12px 14px;display:grid;gap:6px;background:var(--blue-soft)}
+.fb-ok{background:var(--ok-soft)}
+.eyebrow{font:600 .85rem var(--font-display);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+
+.card{background:var(--card);border:3px solid var(--line);border-radius:22px;box-shadow:0 5px 0 var(--line);padding:22px;display:grid;gap:14px;min-width:0}
+.card[hidden]{display:none}
+.best{font:600 1.05rem var(--font-display);background:var(--sun);color:var(--sun-ink);border:2.5px solid var(--line);border-radius:14px;padding:6px 12px;justify-self:start}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.btn.alt{background:var(--card);color:var(--ink)}
+.days{margin:0;padding:0;list-style:none;display:grid;gap:6px}
+.days li{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:6px 12px;border:2.5px solid var(--line);border-radius:12px;background:var(--blue-soft);font-weight:700;font-size:.95rem}
+.sheet{position:fixed;inset:0;z-index:60;background:rgba(10,15,45,.6);display:flex;padding:16px max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px));overflow:auto;overscroll-behavior:contain}
+.sheet[hidden]{display:none}
+.sheet .ocard{max-width:560px;gap:12px}
+.sheet h3{font-size:1.15rem;margin-top:4px}
+.sheet ul,.sheet ol{margin:0;padding-left:1.2rem;display:grid;gap:6px}
+.sheet .small{font-size:.9rem;color:var(--muted)}
+.sheet dl{margin:0;display:grid;gap:10px}
+.sheet dt{font:600 1.05rem var(--font-display)}
+.sheet dd{margin:0}
+.opts{display:flex;gap:10px;flex-wrap:wrap}
+.opt{font:600 1rem var(--font-display);padding:8px 14px;border:3px solid var(--line);border-radius:14px;background:var(--card);cursor:pointer}
+.opt[aria-checked="true"]{background:var(--sun);color:var(--sun-ink);box-shadow:0 0 0 3px var(--card),0 0 0 6px var(--line)}
+.opt:disabled{opacity:.55;cursor:not-allowed}
+.stars{display:flex;gap:6px}
+.star{width:58px;height:58px;fill:var(--card);stroke:var(--line);stroke-width:1.4;stroke-linejoin:round}
+.star.on{fill:var(--sun)}
+.big-num{font:700 2.4rem/1 var(--font-display)}
+.diploma{border:4px double var(--line);border-radius:18px;padding:22px 16px;text-align:center;display:grid;gap:8px;justify-items:center;background:var(--card);box-shadow:inset 0 0 0 7px var(--sun)}
+.diploma h3{font-size:1.5rem}
+.dname{font:700 2rem/1.15 var(--font-display);border-bottom:3px solid var(--line);padding:0 18px 4px;min-width:60%;max-width:100%;overflow-wrap:anywhere}
+.dname.empty{color:var(--muted);font-weight:500}
+.diploma .stars{justify-content:center}
+.diploma .star{width:40px;height:40px}
+.chart{width:100%;max-width:620px;height:auto;display:block;margin:0 auto}
+.chart text{font:700 13px var(--font-body);fill:var(--muted)}
+.band-high{fill:var(--high-soft)}
+.band-ok{fill:var(--ok-soft)}
+.band-low{fill:var(--low-soft)}
+.guide{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 4}
+.axis,.tick{stroke:var(--muted);stroke-width:1.5}
+.line{fill:none;stroke:var(--ink);stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font:700 .85rem var(--font-body);color:var(--muted)}
+.legend span::before{content:"";display:inline-block;width:13px;height:13px;border-radius:4px;margin-right:6px;vertical-align:-2px;border:2px solid var(--line);background:var(--c)}
+.learn{margin:0;padding-left:1.2rem;display:grid;gap:8px}
+.note{font-size:.85rem;color:var(--muted);text-align:center;max-width:56ch;margin:0 auto}
+
+/* letra grande */
+.app.xl{font-size:21px}
+.app.xl .say{font-size:1.5rem;min-height:112px}
+.app.xl .item .lb{font-size:1.05rem}
+.app.xl .scroller .item{flex-basis:120px}
+.app.xl .tube i{font-size:.95rem}
+.app.xl .readout b{font-size:2.2rem}
+.app.xl .ocard{font-size:1.15rem}
+.app.xl .big{font-size:1.5rem}
+
+@keyframes tbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes enter{0%{transform:translateX(-26px);opacity:0}30%{opacity:1}100%{transform:translateX(8px);opacity:0}}
+@keyframes doorglow{from{fill:var(--low-soft)}to{fill:var(--high-soft)}}
+@keyframes bob{0%,100%{transform:translateY(0) scale(1,1)}50%{transform:translateY(-5px) scale(.99,1.01)}}
+@keyframes armL{0%,100%{transform:rotate(0)}50%{transform:rotate(6deg)}}
+@keyframes armR{0%,100%{transform:rotate(0)}50%{transform:rotate(-6deg)}}
+@keyframes waveL{from{transform:rotate(18deg)}to{transform:rotate(-38deg)}}
+@keyframes waveR{from{transform:rotate(-18deg)}to{transform:rotate(38deg)}}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.08)}}
+@keyframes chew{from{transform:scale(1.03,.96)}to{transform:scale(.97,1.04)}}
+@keyframes mouth{from{transform:scaleY(.45)}to{transform:scaleY(1)}}
+@keyframes hop{0%{transform:translateY(0)}40%{transform:translateY(-22px) scale(.97,1.04)}100%{transform:translateY(0) scale(1.04,.96)}}
+@keyframes shiver{from{transform:translateX(-3px)}to{transform:translateX(3px)}}
+@keyframes sway{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+@keyframes fume{0%,100%{transform:translateX(0) rotate(0)}25%{transform:translateX(-2px) rotate(-1deg)}75%{transform:translateX(2px) rotate(1deg)}}
+@keyframes breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.02,.98)}}
+@keyframes zz{0%{transform:translate(0,0);opacity:0}30%{opacity:1}100%{transform:translate(12px,-24px);opacity:0}}
+@keyframes sayPop{from{transform:scale(.95)}to{transform:scale(1)}}
+@keyframes wiggle{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+@keyframes bounce{from{transform:translate(0,-60px)}to{transform:translate(-26px,0)}}
+@keyframes floatUp{from{transform:translateY(0) scale(.7);opacity:1}to{transform:translateY(-80px) scale(1.2);opacity:0}}
+@keyframes trem{0%,100%{transform:translateX(0)}25%{transform:translateX(-1.5px)}75%{transform:translateX(1.5px)}}
+@keyframes ocIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@keyframes rain{to{transform:translateY(36px)}}
+@keyframes drift{from{transform:translateX(-14px)}to{transform:translateX(14px)}}
+.m-low .rig{animation:trem .22s linear infinite}
+.ocard{animation:ocIn .25s ease-out}
+.wx{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden;border-radius:inherit}
+.wx i{position:absolute;font-style:normal;font-size:2.4rem;opacity:.85;display:none;animation:drift 7s ease-in-out infinite alternate}
+.wx.cloud i,.wx.rain i{display:block}
+.wx.rain::after{content:"";position:absolute;left:0;right:0;top:-36px;bottom:0;background:linear-gradient(100deg,transparent 46%,rgba(90,120,210,.45) 50%,transparent 54%) 0 0/20px 36px;animation:rain .7s linear infinite;opacity:.7;will-change:transform}
+.cust{border:3px dashed var(--line);border-radius:14px;padding:8px 12px}.cust summary{cursor:pointer;font-weight:800;list-style:none}.cust summary::-webkit-details-marker{display:none}.cust[open] summary{margin-bottom:10px}.cust .field{margin-top:12px}
+.lowstep{display:flex;gap:10px;align-items:center;width:100%;text-align:left}
+.lowstep.done{background:var(--ok-soft);opacity:.85}
+.lowstep.bad{animation:shake .3s}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chips span{padding:5px 10px;border:2.5px solid var(--line);border-radius:14px;font-weight:700;font-size:.85rem;background:var(--card)}.chips span.no{opacity:.45;border-style:dashed}
+.chat{font-weight:800;padding:10px 12px;border:3px dashed var(--line);border-radius:14px}
+@media (prefers-reduced-motion:reduce){
+  .wx i,.wx::after,.ocard,.lowstep.bad,
+  .rig,.arm,.eye,.mouth-open,.gdot,.thought,.door.shut .door-panel,.item.pulse,.glwrap.playing .ball,.m-sleep .zzz,.fx,.say.pop{animation:none!important}
+}
+/* Pantallas anchas o celular acostado: escenario a la izquierda, bandeja a la derecha con todas las comidas a la vista */
+@media (min-width:900px),(orientation:landscape) and (min-width:640px){
+  .app{grid-template-columns:minmax(0,1.3fr) minmax(300px,1fr);align-items:stretch;column-gap:18px}
+  .hud,.note,.card{grid-column:1/-1}
+  .stage{min-height:max(380px,calc(100vh - 120px))}
+  .tray{align-content:start}
+  .strip{grid-template-columns:minmax(0,1fr)}
+  .arrow,.slidehint{display:none}
+  .scroller{flex-wrap:wrap;overflow:visible;scroll-snap-type:none;padding:8px 4px}
+  .app .scroller .item,.app.xl .scroller .item{flex:0 0 calc(33.333% - 7px);min-width:0;min-height:clamp(62px,11vh,100px);padding:6px 4px}
+  .item .em{font-size:clamp(1.6rem,4.4vh,2.4rem);height:clamp(1.9rem,5vh,2.8rem)}
+  .tools .item{min-height:clamp(62px,11vh,100px)}
+  .tray{padding:12px;gap:8px}
+  .hint{font-size:.85rem}
+  .glwrap{width:min(clamp(240px,46vh,440px),100%)}
+}
+@media (min-width:1100px){
+  .app .scroller .item,.app.xl .scroller .item{flex-basis:calc(25% - 8px)}
+}
+@media (max-height:520px) and (orientation:landscape){
+  .item{min-height:84px}
+  .item .em{font-size:2rem;height:2.3rem}
+}
+@media (max-width:520px){
+  .stage{grid-template-columns:78px 1fr;padding:10px 8px 12px;min-height:clamp(470px,68vh,760px)}
+  .tube{width:32px}
+  .tube i{left:40px;font-size:.7rem}
+  .answers{gap:8px}
+  .arrow{display:none}
+  .strip{grid-template-columns:minmax(0,1fr)}
+  .tools{gap:8px}
+  .tools .item .lb{font-size:.78rem}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="hud">
+    <div class="brand" id="brand">El Día de Gluco</div>
+    <div class="chips">
+      <span class="chip green" id="pct" hidden title="Comidas del día y tiempo en zona verde">🍽️ 0 · 🟢 0%</span>
+      <span class="chip clock" id="clock">☀️ 8:00</span>
+      <div class="menuwrap">
+        <button class="chip" id="menuBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="menu" aria-label="Menú">☰</button>
+        <div class="menu" id="menu" hidden>
+          <button class="menuitem" id="simBtn" type="button" aria-haspopup="dialog">📈 Simulador de curvas</button>
+          <button class="menuitem" id="dictBtn" type="button" aria-haspopup="dialog">📖 ¿Qué es...?</button>
+          <button class="menuitem" id="adultsBtn" type="button" aria-haspopup="dialog">👪 Para adultos</button>
+          <button class="menuitem" id="xlBtn" type="button" aria-pressed="false" title="Letra grande y textos cortos">Aa Letra grande</button>
+          <button class="menuitem" id="soundBtn" type="button" aria-label="Efectos activados. Tocá para activar la música">🔊 Efectos</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="stage" id="stage">
+    <div class="sky" aria-hidden="true"><div class="wx" id="wx"><i style="left:8%;top:5%">☁️</i><i style="left:58%;top:12%;animation-delay:-3s">☁️</i><i style="left:30%;top:2%;animation-delay:-5s;font-size:1.8rem">☁️</i></div><div class="tint" id="tint"></div><div class="starfield" id="starfield"><i style="left:12%;top:9%">✦</i><i style="left:30%;top:20%">✧</i><i style="left:52%;top:7%">✦</i><i style="left:70%;top:17%">✧</i><i style="left:88%;top:8%">✦</i><i style="left:20%;top:38%">✧</i><i style="left:82%;top:34%">✦</i></div><div class="orb" id="orb">☀️</div></div>
+    <div class="gauge">
+      <h3>Glucosa</h3>
+      <div class="tube">
+        <i class="t180">180</i><i class="t70">70</i>
+        <div class="marker" id="marker" style="bottom:30%"></div>
+      </div>
+      <div class="mini" id="mini" aria-hidden="true"><span title="Comida que se está absorbiendo">🍽️<i id="foodBar"></i></span><span title="Insulina que sigue actuando">🔑<i id="insBar"></i></span></div>
+      <div class="readout z-ok" id="readout"><b id="num">115</b><small>mg/dL</small><small id="trend" class="trend" role="img" aria-label="Tendencia: estable" title="estable">→</small><small id="trendTxt" class="trendTxt">estable</small></div>
+    </div>
+    <div class="center">
+      <div class="say" id="say" role="status" aria-live="polite">¡Hola! Soy Gluco.</div>
+      <div class="glwrap" id="glwrap">
+        <svg id="gl" viewBox="0 0 200 235" class="m-ok" role="img" aria-label="Una gota simpática con ojos grandes">
+          <ellipse class="shadow" cx="100" cy="224" rx="64" ry="9"/>
+          <g class="rig">
+            <g class="arm arm-l"><path class="limb-o" d="M40 134 Q14 146 20 170"/><path class="limb" d="M40 134 Q14 146 20 170"/></g>
+            <g class="arm arm-r"><path class="limb-o" d="M160 134 Q186 146 180 170"/><path class="limb" d="M160 134 Q186 146 180 170"/></g>
+            <ellipse class="foot" cx="78" cy="214" rx="19" ry="10"/>
+            <ellipse class="foot" cx="122" cy="214" rx="19" ry="10"/>
+            <path class="drop" d="M100 12 C100 12 32 96 32 140 A68 68 0 0 0 168 140 C168 96 100 12 100 12 Z"/>
+            <path class="shine" d="M56 140 Q58 112 76 94"/>
+            <g class="door" id="door"><rect class="door-frame" x="84" y="172" width="32" height="30" rx="7"/><rect class="door-panel" x="87" y="175" width="26" height="24" rx="4"/><circle class="door-knob" cx="108" cy="187" r="2.2"/><circle class="gdot" cx="88" cy="181" r="2.6"/><circle class="gdot" cx="88" cy="187" r="2.6" style="animation-delay:.4s"/><circle class="gdot" cx="88" cy="193" r="2.6" style="animation-delay:.8s"/><text class="dtxt" id="doorLocks" x="100" y="192"></text></g>
+            <g class="eyes">
+              <g class="eye eye-l"><ellipse class="sclera" cx="78" cy="112" rx="13" ry="15"/><g id="pupL"><circle class="pupil" cx="78" cy="114" r="7.5"/><circle class="gleam" cx="75" cy="110" r="2.6"/></g></g>
+              <g class="eye eye-r"><ellipse class="sclera" cx="122" cy="112" rx="13" ry="15"/><g id="pupR"><circle class="pupil" cx="122" cy="114" r="7.5"/><circle class="gleam" cx="119" cy="110" r="2.6"/></g></g>
+            </g>
+            <path class="eye-arc eye-sleep" d="M65 114 Q78 126 91 114"/><path class="eye-arc eye-sleep" d="M109 114 Q122 126 135 114"/>
+            <path class="eye-arc eye-happy" d="M65 120 Q78 102 91 120"/><path class="eye-arc eye-happy" d="M109 120 Q122 102 135 120"/>
+            <path class="brow" d="M63 98 L91 88"/><path class="brow" d="M137 98 L109 88"/>
+            <path class="brow2" d="M63 92 L91 102"/><path class="brow2" d="M137 92 L109 102"/>
+            <path class="tear" d="M80 130 q7 11 0 18 q-7 -7 0 -18z"/>
+            <circle class="cheek" cx="58" cy="140" r="9"/><circle class="cheek" cx="142" cy="140" r="9"/>
+            <g class="mouth mouth-ok"><path class="mf" d="M84 146 Q100 162 116 146"/></g>
+            <g class="mouth mouth-happy"><path class="mf fill" d="M78 140 Q100 178 122 140 Z"/><ellipse class="tongue" cx="100" cy="158" rx="10" ry="6"/></g>
+            <g class="mouth mouth-open"><ellipse class="mf fill" cx="100" cy="152" rx="15" ry="17"/><ellipse class="tongue" cx="100" cy="162" rx="9" ry="5"/></g>
+            <g class="mouth mouth-low"><path class="mf" d="M84 162 Q100 146 116 162"/></g>
+            <g class="mouth mouth-high"><path class="mf" d="M80 154 q7 -9 14 0 t14 0 t14 0"/></g>
+            <g class="mouth mouth-sleep"><path class="mf" d="M90 150 Q100 158 110 150"/></g>
+            <path class="sweat" d="M160 80 q10 14 0 22 q-10 -8 0 -22z"/><path class="sweat" d="M40 96 q8 12 0 19 q-8 -7 0 -19z"/>
+            <path class="spark" d="M26 60 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3z"/><path class="spark" d="M170 38 l2.5 6.5 6.5 2.5 -6.5 2.5 -2.5 6.5 -2.5 -6.5 -6.5 -2.5 6.5 -2.5z"/>
+            <g id="acc-hat" style="display:none"><circle cx="100" cy="4" r="7" fill="#FF6F83" stroke="var(--line)" stroke-width="4"/><path d="M78 40 Q80 8 100 8 Q120 8 122 40 Z" fill="#FF6F83" stroke="var(--line)" stroke-width="4" stroke-linejoin="round"/><rect x="72" y="36" width="56" height="12" rx="6" fill="#FFE9C2" stroke="var(--line)" stroke-width="4"/></g>
+            <g id="acc-glasses" style="display:none"><circle cx="78" cy="112" r="19" fill="#fff" fill-opacity=".25" stroke="var(--line)" stroke-width="4"/><circle cx="122" cy="112" r="19" fill="#fff" fill-opacity=".25" stroke="var(--line)" stroke-width="4"/><path d="M96 108 Q100 103 104 108" fill="none" stroke="var(--line)" stroke-width="4" stroke-linecap="round"/></g>
+            <g id="acc-bow" style="display:none"><path d="M100 26 L76 12 L76 40 Z M100 26 L124 12 L124 40 Z" fill="#FF8CC6" stroke="var(--line)" stroke-width="4" stroke-linejoin="round"/><circle cx="100" cy="26" r="7" fill="#FF6F83" stroke="var(--line)" stroke-width="4"/></g>
+            <g id="acc-party" style="display:none"><path d="M80 40 L100 -6 L120 40 Z" fill="#7C5CE6" stroke="var(--line)" stroke-width="4" stroke-linejoin="round"/><circle cx="100" cy="-6" r="6" fill="var(--sun)" stroke="var(--line)" stroke-width="3"/><circle cx="96" cy="22" r="3" fill="#FFC93C"/><circle cx="106" cy="30" r="3" fill="#7FD9A8"/></g>
+            <g id="acc-star" style="display:none"><text x="100" y="34" text-anchor="middle" font-size="44">⭐</text></g>
+            <g id="acc-crown" style="display:none"><path d="M76 40 L80 12 L92 26 L100 4 L108 26 L120 12 L124 40 Z" fill="var(--sun)" stroke="var(--line)" stroke-width="4" stroke-linejoin="round"/></g>
+            <text class="zzz" x="140" y="70">z</text><text class="zzz" x="156" y="48" style="animation-delay:.8s">z</text>
+          </g>
+        </svg>
+        <div class="thought" id="thought" hidden aria-hidden="true"></div>
+        <div class="ball" aria-hidden="true">⚽</div>
+      </div>
+    </div>
+    <div class="overlay" id="overlay" hidden></div>
+  </section>
+
+  <section class="tray" id="tray" aria-label="Cosas para darle a Gluco">
+    <div class="shelf">
+      <h3>Comidas<span class="slidehint"> · deslizá para ver más</span></h3>
+      <div class="strip">
+        <button class="arrow" id="prev" type="button" aria-label="Ver comidas anteriores">‹</button>
+        <div class="scroller" id="scroller">
+          <button class="item" type="button" data-id="water"><span class="em">💧</span><span class="lb">Agua</span></button>
+          <button class="item" type="button" data-id="apple"><span class="em">🍎</span><span class="lb">Manzana</span></button>
+          <button class="item" type="button" data-id="banana"><span class="em">🍌</span><span class="lb">Banana</span></button>
+          <button class="item" type="button" data-id="yogurt"><span class="em">🥣</span><span class="lb">Yogur con avena</span></button>
+          <button class="item" type="button" data-id="milk"><span class="em">🥛</span><span class="lb">Leche y pan integral</span></button>
+          <button class="item" type="button" data-id="chicken"><span class="em">🍗</span><span class="lb">Pollo con ensalada</span></button>
+          <button class="item" type="button" data-id="pasta"><span class="em">🍝</span><span class="lb">Fideos con salsa</span></button>
+          <button class="item" type="button" data-id="pizza"><span class="em">🍕</span><span class="lb">Pizza</span></button>
+          <button class="item" type="button" data-id="cookie"><span class="em">🍪</span><span class="lb">Galletitas rellenas</span></button>
+          <button class="item" type="button" data-id="alfajor"><span class="em">🍫</span><span class="lb">Alfajor</span></button>
+          <button class="item" type="button" data-id="cake"><span class="em">🍰</span><span class="lb">Torta</span></button>
+          <button class="item" type="button" data-id="soda"><span class="em">🥤</span><span class="lb">Gaseosa</span></button>
+        </div>
+        <button class="arrow" id="next" type="button" aria-label="Ver más comidas">›</button>
+      </div>
+    </div>
+    <div class="shelf">
+      <h3>Siempre a mano</h3>
+      <div class="tools">
+        <button class="item tool" type="button" data-id="key"><span class="badge" id="keyBadge">0</span><span class="em">🔑</span><span class="lb">Llave de insulina</span></button>
+        <button class="item tool" type="button" data-id="ball"><span class="em">⚽</span><span class="lb">Pelota</span></button>
+        <button class="item tool" type="button" data-id="juice"><span class="em">🧃</span><span class="lb">Jugo</span></button>
+        <button class="item tool" type="button" data-id="sugar"><span class="em">🍬</span><span class="lb">Azúcar</span></button>
+      </div>
+    </div>
+    <p class="hint">Arrastrá hasta Gluco, o tocá. Velocidad de subida: <span class="legend2"><i class="dot g-low"></i> despacio <i class="dot g-med"></i> normal <i class="dot g-fast"></i> rápido <i class="dot g-late"></i> tarde</span></p>
+  </section>
+
+  <section class="card" id="results" hidden></section>
+  <p class="note">Este juego es para aprender y divertirse. Para el cuidado de cada persona valen siempre las indicaciones de su médico o médica.</p>
+</div>
+
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetT" hidden>
+  <div class="ocard">
+    <h2 id="sheetT">Para adultos</h2>
+    <p>Es una simulación sencilla para conversar sobre diabetes con niñas y niños. Un día de juego dura unos 5 a 7 minutos y se pausa mientras está abierta esta pantalla.</p>
+    <h3>Qué se aprende jugando</h3>
+    <ul>
+      <li>La glucosa es la energía del cuerpo. La insulina es como una llave que la deja entrar a las células.</li>
+      <li>En el juego, la zona verde va de 70 a 180 mg/dL. Por debajo hablamos de glucosa baja (hipoglucemia) y por encima, de glucosa alta (hiperglucemia).</li>
+      <li>Cada comida tiene una velocidad de subida, según su índice glucémico: alto (gaseosa, dulces, sube de golpe), medio (fideos, pizza) o bajo (fruta, avena, pan integral, sube de a poco). En el juego se ve con un punto de color en cada comida.</li>
+      <li>Las comidas con mucha azúcar suben rápido y después pueden bajar de golpe (rebote). Las que tienen grasa, como la pizza, suben más tarde y más despacio.</li>
+      <li>Comer poco no es una manera de quedar en zona verde: el juego pide comer a lo largo del día (comidas principales y colaciones). Si hay poco apetito, se conversa con el equipo de salud.</li>
+      <li>Cada día pasa una situación (gimnasia, cumpleaños o resfrío) y a la hora de comer puede faltarle el apetito: conviene conversar qué haríamos en cada caso.</li>
+      <li>Las emociones fuertes, como la tristeza o el enojo, también pueden mover la glucosa. Contar lo que pasa ayuda.</li>
+      <li>La insulina del juego actúa con una curva: empieza a los pocos minutos, tiene su mayor efecto después de un par de horas y sigue varias horas. Es una ilustración, no una pauta de dosis. Una glucosa baja nunca se corrige con insulina: se corrige con algo dulce.</li>
+      <li>Cada comida tiene su velocidad, su pico y su duración. Se pueden comparar en el simulador de curvas del menú.</li>
+      <li>Durante el día aparecen preguntas de mito o realidad y adivinanzas sobre cómo sube la glucosa. Al final hay logros, la curva del día con las comidas y llaves marcadas, y una pregunta para conversar en familia o en clase.</li>
+      <li>Moverse la baja. Si baja de más, se corrige con algo dulce y se avisa a un adulto.</li>
+      <li>La diabetes no se contagia, no se causa por comer dulces y no impide jugar ni hacer deporte.</li>
+    </ul>
+    <h3>Para conversar después de jugar</h3>
+    <ol>
+      <li>¿Qué le pasó al personaje cuando comió la gaseosa o la torta? ¿Y con la manzana?</li>
+      <li>¿Cómo se sintió cuando su glucosa estuvo baja? ¿Qué hiciste para ayudarlo?</li>
+      <li>¿Para qué sirve la llave? ¿Qué pasa si las cerraduras quedan cerradas?</li>
+      <li>Si un amigo se marea y transpira, ¿qué podemos hacer?</li>
+      <li>¿Qué hacés cuando te sentís triste o enojado? ¿Se lo contás a alguien?</li>
+    </ol>
+    <p class="small"><b>Importante:</b> los tiempos, las cantidades y las llaves del juego están simplificados y no son dosis reales. Los objetivos y el tratamiento de cada niño o niña los define su equipo de salud. Los datos del juego se guardan solo en este dispositivo.</p>
+    <button class="btn sun" type="button" id="sheetClose" data-close>Volver al juego</button>
+  </div>
+</div>
+
+<div class="sheet" id="sim" role="dialog" aria-modal="true" aria-labelledby="simT" hidden>
+  <div class="ocard">
+    <h2 id="simT">Simulador de curvas</h2>
+    <p>Elegí una comida y mirá cómo cambia la forma de la curva. Podés sumar la insulina rápida ilustrativa.</p>
+    <div class="opts" role="radiogroup" aria-label="Comida" id="simFoods"></div>
+    <button class="opt" id="simIns" type="button" aria-pressed="false">🔑 Mostrar insulina rápida</button>
+    <div id="simChart"></div>
+    <p class="small" id="simInfo"></p>
+    <p class="small">La forma de la curva muestra la <b>velocidad</b>; su altura depende de la <b>cantidad</b> de hidratos de carbono de la porción.</p>
+    <p class="small"><b>Importante:</b> las cifras y curvas son ficticias, solo sirven para comparar patrones. No permiten estimar glucosa futura, dosis, horarios de inyección ni riesgo personal de glucosa baja.</p>
+    <button class="btn sun" type="button" data-close>Volver al juego</button>
+  </div>
+</div>
+
+<div class="sheet" id="dict" role="dialog" aria-modal="true" aria-labelledby="dictT" hidden>
+  <div class="ocard">
+    <h2 id="dictT">¿Qué es...?</h2>
+    <dl>
+      <dt>Glucosa</dt><dd>Es el azúcar de la sangre. Le da energía a todo el cuerpo.</dd>
+      <dt>Insulina</dt><dd>Es como una llave: abre las puertas de las células para que la glucosa entre.</dd>
+      <dt>Diabetes</dt><dd>Es cuando el cuerpo no puede mantener la glucosa en equilibrio solo. Con cuidados, se puede jugar, estudiar y hacer deporte. No se contagia.</dd>
+      <dt>Velocidad de subida</dt><dd>Cada comida sube la glucosa distinto: verde es despacio, naranja normal, rojo rápido y violeta tarde y por más tiempo. A esto los adultos le llaman índice glucémico.</dd>
+      <dt>Velocidad y cantidad</dt><dd>La velocidad (índice glucémico) dice qué tan rápido sube la glucosa. La cantidad de hidratos de carbono dice cuánto sube en total. Una comida puede subir despacio pero mucho, o rápido pero poco. La grasa y la proteína también pueden retrasar la subida.</dd>
+      <dt>Insulina activa</dt><dd>La insulina no baja la glucosa de golpe: empieza a trabajar, hace su mayor efecto un par de horas después y sigue varias horas. Por eso dos llaves cercanas se suman.</dd>
+      <dt>Flecha de tendencia</dt><dd>Debajo del número muestra si la glucosa está subiendo, bajando o estable en los últimos minutos.</dd>
+      <dt>Días de enfermedad</dt><dd>Cuando estamos enfermos la glucosa puede subir. Se toma agua y se avisa a un adulto.</dd>
+      <dt>Rebote</dt><dd>Con mucha azúcar la glucosa sube rápido y después puede bajar de golpe. Por eso hay que volver a mirar el nivel.</dd>
+      <dt>Grasa</dt><dd>Hace que la comida suba la glucosa más tarde y más despacio.</dd>
+      <dt>Zona verde</dt><dd>Es el nivel de glucosa que queremos en el juego: entre 70 y 180.</dd>
+      <dt>Glucosa baja</dt><dd>Es cuando hay poca glucosa. Da temblor, sudor y sueño. Se arregla con algo dulce y avisando a un adulto.</dd>
+      <dt>Glucosa alta</dt><dd>Es cuando hay demasiada glucosa. Moverse y avisar a un adulto ayuda.</dd>
+      <dt>Hidratos de carbono</dt><dd>Están en el pan, los fideos, las frutas y los dulces. Son los que más hacen subir la glucosa.</dd>
+    </dl>
+    <button class="btn sun" type="button" data-close>Volver al juego</button>
+  </div>
+</div>
+<script>(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+var T0=480,T1=1200,SPEEDS={normal:4,calm:2.5};
+var reduce=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+var pet={name:'Gluco',color:'#7DB5FF',acc:'none'};
+var easy=false,curSheet=null,sheetOpener=null;
+
+/* ---------- datos guardados (solo en este dispositivo; si el navegador no deja, el juego sigue igual) ---------- */
+var KEY='gluco-v1';
+function load(){
+  try{
+    var j=JSON.parse(localStorage.getItem(KEY));
+    if(j&&typeof j==='object')return {best:typeof j.best==='number'?j.best:null,me:typeof j.me==='string'?j.me.slice(0,24):'',log:Array.isArray(j.log)?j.log.slice(0,5):[],pn:typeof j.pn==='string'?j.pn.slice(0,12):'',pc:typeof j.pc==='string'?j.pc:'',stars:Number(j.stars)>0?Math.floor(Number(j.stars)):0,acc:typeof j.acc==='string'?j.acc:'none',speed:j.speed==='calm'?'calm':'normal'};
+  }catch(e){}
+  return {best:null,me:'',log:[],pn:'',pc:'',stars:0,acc:'none',speed:'normal'};
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){}}
+var DB=load();
+var ACCS=[{id:'none',em:'—',name:'Nada',need:0},{id:'hat',em:'🧢',name:'Gorro',need:3},{id:'glasses',em:'👓',name:'Anteojos',need:6},{id:'crown',em:'👑',name:'Corona',need:10},{id:'bow',em:'🎀',name:'Moño',need:13},{id:'party',em:'🥳',name:'Gorro de fiesta',need:16},{id:'star',em:'⭐',name:'Estrella',need:20}];
+var COLORS=[['Azul','#7DB5FF'],['Verde','#7FD9A8'],['Rosa','#FF9FC8'],['Violeta','#B7A6FF'],['Turquesa','#6FD8E0']];
+
+/* ---------- datos ---------- */
+/* Cada comida: rise = cuánto sube en total; d = minutos hasta empezar; tp = minutos hasta el pico; dur = duración del efecto. Valores de juego, no clínicos. */
+var FOODS={
+  water:{em:'💧',rise:0,locks:[],full:0,gi:'none',say:'¡Glup! El agua hidrata y no sube mi glucosa.',short:'¡Glup! Agua fresca.'},
+  apple:{em:'🍎',rise:40,d:10,tp:60,dur:150,pk:'45–90 min',du:'2–3 h',locks:[40],full:1,gi:'low',say:'¡Ñam! La fruta hace que la glucosa suba despacito.',short:'¡Ñam! Sube despacito.'},
+  banana:{em:'🍌',rise:45,d:10,tp:55,dur:150,pk:'30–90 min',du:'2–3 h',locks:[45],full:1,gi:'med',say:'¡Ñam! La banana sube la glucosa a un ritmo normal. Si está bien madura, sube más rápido.',short:'¡Ñam! Sube normal.'},
+  yogurt:{em:'🥣',rise:35,d:15,tp:90,dur:200,pk:'60–120 min',du:'3–4 h',locks:[35],full:1,gi:'low',say:'¡Rico! El yogur con avena sube la glucosa muy despacito.',short:'¡Rico! Sube despacito.'},
+  milk:{em:'🥛',rise:55,d:10,tp:65,dur:180,pk:'45–90 min',du:'2–4 h',locks:[55],full:1,gi:'med',say:'¡Rico! La leche con pan integral sube la glucosa a un ritmo normal.',short:'¡Rico! Sube normal.'},
+  chicken:{em:'🍗',rise:30,d:30,tp:120,dur:240,pk:'variable',du:'variable',locks:[30],full:2,gi:'low',say:'¡Un plato bien equilibrado! Casi no mueve mi glucosa y sube tarde y despacio.',short:'¡Plato equilibrado!'},
+  pasta:{em:'🍝',rise:90,d:15,tp:90,dur:210,pk:'60–120 min',du:'3–4 h',locks:[45,45],full:2,gi:'med',say:'¡Qué rico! Tiene muchos hidratos de carbono: necesito dos llaves.',short:'¡Rico! Necesito dos llaves.'},
+  pizza:{em:'🍕',rise:100,d:40,tp:170,dur:330,pk:'90–240 min',du:'4–6 h o más',locks:[50,50],full:2,gi:'late',say:'¡Mmm, pizza! La grasa hace que la glucosa suba más tarde y dure más. Necesito dos llaves.',short:'¡Pizza! Sube tarde y dura.'},
+  cookie:{em:'🍪',rise:60,d:5,tp:55,dur:170,pk:'30–90 min',du:'2–4 h',dip:12,locks:[60],full:1,gi:'fast',say:'Las galletitas rellenas son azúcar rápida: la glucosa sube enseguida y después puede bajar de golpe.',short:'¡Azúcar rápida! Sube y baja.'},
+  alfajor:{em:'🍫',rise:110,d:10,tp:85,dur:240,pk:'45–120 min',du:'3–5 h',dip:10,locks:[55,55],full:1,gi:'late',say:'¡Dulce de leche! Tiene azúcar y grasa: sube y dura más tiempo.',short:'¡Azúcar y grasa! Dura más.'},
+  cake:{em:'🍰',rise:140,d:10,tp:80,dur:240,pk:'45–120 min',du:'3–5 h',dip:18,locks:[70,70],full:2,gi:'med',say:'¡Dulce! El azúcar sube mi glucosa bastante y después puede bajar de golpe.',short:'¡Dulce! Sube y después baja.'},
+  soda:{em:'🥤',rise:120,d:0,tp:30,dur:100,pk:'15–45 min',du:'1–2 h',dip:25,locks:[60,60],full:1,gi:'fast',say:'¡Glup! La gaseosa sube la glucosa como un cohete... y después baja rápido.',short:'¡Glup! Cohete: sube y baja.'},
+  juice:{em:'🧃',rise:50,d:0,tp:12,dur:45,dip:6,pk:'10–20 min',du:'1 h',locks:[],full:.5,gi:'fast',say:'',short:''},
+  sugar:{em:'🍬',rise:30,d:0,tp:10,dur:40,pk:'10–15 min',du:'1 h',locks:[],full:.2,gi:'fast',say:'',short:''}
+};
+/* La insulina rápida (ilustrativa): empieza a los pocos minutos, su mayor efecto llega después de un par de horas y sigue varias horas. */
+var INS={d:25,tp:130,dur:300};
+function tri(a,d,tp,dur){if(a<=d||a>=dur)return 0;var h=2/(dur-d);return a<tp?h*(a-d)/(tp-d):h*(dur-a)/(dur-tp);}
+function tcdf(a,d,tp,dur){if(a<=d)return 0;if(a>=dur)return 1;var h=2/(dur-d);return a<tp?h*(a-d)*(a-d)/(2*(tp-d)):1-h*(dur-a)*(dur-a)/(2*(dur-tp));}
+function bump(a){var u=a/90;return u<=0||u>=1?0:(u<.5?2*u:2*(1-u));}
+function newAbs(id,R){var f=FOODS[id];return {id:id,R:R*AMP,d:f.d,tp:f.tp,dur:f.dur,dip:f.dip||0,age:0,dd:0};}
+var NAMES={water:'el agua',apple:'la manzana',banana:'la banana',yogurt:'el yogur',milk:'la leche',chicken:'el pollo',pasta:'los fideos',pizza:'la pizza',cookie:'las galletitas',alfajor:'el alfajor',cake:'la torta',soda:'la gaseosa',juice:'el jugo',sugar:'el azúcar',key:'la llave',ball:'la pelota'};
+var QUESTIONS=[
+  {t:'La diabetes se contagia, como un resfrío.',a:'mito',why:'No se contagia. Podés jugar y abrazar a un amigo que tiene diabetes sin ningún problema.'},
+  {t:'Las personas con diabetes pueden jugar a la pelota y hacer deporte.',a:'realidad',why:'Moverse es muy bueno. Solo hay que planificarlo y tener a mano algo para comer por si la glucosa baja.'},
+  {t:'La diabetes aparece por comer demasiados dulces.',a:'mito',why:'En la diabetes tipo 1 el cuerpo deja de fabricar insulina, y eso no depende de lo que se comió.'},
+  {t:'La insulina es como una llave que deja entrar la glucosa a las células.',a:'realidad',why:'Las células usan la glucosa como energía. Sin la llave, la glucosa se queda en la sangre.'},
+  {t:'Una persona con diabetes nunca puede comer nada dulce.',a:'mito',why:'Puede comer algo dulce de vez en cuando, dentro de un plan con su equipo de salud.'},
+  {t:'Si la glucosa está baja, hace falta algo dulce enseguida.',a:'realidad',why:'Por ejemplo, un vasito de jugo. Y hay que avisar a un adulto.'},
+  {t:'Un té de yuyos puede curar la diabetes.',a:'mito',why:'No hay té mágico. La diabetes se cuida con insulina o medicación, buena comida, movimiento y controles médicos.'},
+  {t:'Las niñas y los niños con diabetes tipo 1 no pueden ir a la escuela como los demás.',a:'mito',why:'Pueden estudiar, jugar y hacer deportes igual que sus compañeros. Solo necesitan un plan y adultos que sepan ayudar.'},
+  {t:'Medir la glucosa ayuda a saber qué necesita el cuerpo.',a:'realidad',why:'Es una forma de mirar cómo estamos y decidir, junto al equipo de salud, qué hacer.'},
+  {t:'Cuando uno se siente bien, puede dejar la insulina.',a:'mito',why:'En la diabetes tipo 1 el cuerpo no fabrica insulina, así que no se deja de usar. Cualquier cambio lo decide el equipo de salud.'},
+  {t:'Tomar agua sin azúcar no hace subir la glucosa.',a:'realidad',why:'El agua hidrata y no tiene hidratos de carbono. ¡Es una gran compañera!'},
+  {t:'Cuando estoy enfermo, la glucosa puede subir aunque no coma de más.',a:'realidad',why:'El cuerpo trabaja para defenderse y la glucosa puede cambiar. Se toma agua y se avisa a un adulto.'},
+  {t:'Estar triste o enojado no tiene nada que ver con la glucosa.',a:'mito',why:'Las emociones fuertes también pueden mover la glucosa. Contar lo que sentimos ayuda.'},
+  {t:'Un amigo con diabetes puede compartir la merienda con todos.',a:'realidad',why:'Puede compartir momentos y meriendas. Solo se tiene en cuenta lo que come para cuidar su glucosa.'},
+  {t:'Si estás mareado y con sudor frío, lo mejor es seguir jugando.',a:'mito',why:'Hay que parar, tomar algo dulce y avisar a un adulto enseguida.'}
+];
+var QTIMES=[540,1000],GAP=100;
+var AMP=1.3;
+var SITS={
+  gym:{em:'🏃',t:'¡Hoy hay gimnasia en la escuela!',p:'Voy a correr un buen rato y moverme gasta glucosa. ¿Qué hacemos antes?',o:[['🍎 Comer una fruta antes','fruit'],['🏃 Ir sin comer','go']]},
+  bday:{em:'🎂',t:'¡Es el cumpleaños de un amigo!',p:'Hay torta y frutas. ¿Qué elijo?',o:[['🍰 Un trozo de torta','cake'],['🍎 Una fruta','fruit'],['🙅 Solo jugar','none']]},
+  sick:{em:'🤧',t:'¡Me resfrié!',p:'Cuando estoy enfermo mi glucosa puede subir aunque no coma de más. ¿Qué hacemos?',o:[['💧 Darme agua','water'],['😶 Seguir como si nada','none']]},
+  appetite:{em:'😕',t:'No tengo ganas de comer: estoy lleno.',p:'Ya me pusieron la insulina para esta comida. ¿Qué hacemos?',o:[['🍎 Comer un poquito','small'],['🧃 Tomar jugo','juice'],['🙅 No comer nada','none']]}
+};
+var SLOT_START=[480,690,900],SLOT_FOOD=['yogurt','chicken','milk'],SLOT_NAME=['el desayuno','el almuerzo','la merienda'];
+function slotOf(t){return t<690?0:(t<900?1:2);}
+var EVENTS={
+  sad:['Hoy no me invitaron a jugar y me quedé solo en el recreo.','Se me rompió mi dibujo favorito.','Extraño mucho a mi abuela.'],
+  angry:['Perdí el partido y me dio mucha bronca.','Me retaron por algo que yo no hice.','En el cumpleaños dijeron que yo no podía comer torta y me enojé.']
+};
+
+/* ---------- utilidades ---------- */
+function zone(g){return g<70?'low':(g>180?'high':'ok');}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function fmt(t){var h=Math.floor(t/60),m=Math.floor(t%60);return h+':'+(m<10?'0':'')+m;}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var x=a[i];a[i]=a[j];a[j]=x;}return a;}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function star(on){return '<svg viewBox="0 0 24 24" class="star'+(on?' on':'')+'" aria-hidden="true"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 17.8 5.8 21.1 7 14.2 2 9.3l6.9-1z"/></svg>';}
+
+/* ---------- sonido ---------- */
+var audio=null,muted=false;
+function tone(f,d,type,v,delay){
+  if(muted)return;
+  try{
+    audio=audio||new (window.AudioContext||window.webkitAudioContext)();
+    if(audio.state==='suspended')audio.resume();
+    var o=audio.createOscillator(),g=audio.createGain(),t0=audio.currentTime+(delay||0);
+    o.type=type||'sine';o.frequency.value=f;
+    g.gain.setValueAtTime(v||.07,t0);g.gain.exponentialRampToValueAtTime(.0001,t0+d);
+    o.connect(g);g.connect(audio.destination);o.start(t0);o.stop(t0+d+.02);
+  }catch(e){}
+}
+var sfx={
+  eat:function(){tone(420,.08,'triangle');tone(560,.08,'triangle',.07,.09);tone(700,.12,'triangle',.07,.18);},
+  key:function(){tone(880,.07,'square',.04);tone(1320,.18,'square',.04,.08);},
+  good:function(){tone(523,.1,'triangle');tone(659,.1,'triangle',.07,.1);tone(784,.18,'triangle',.07,.2);},
+  bad:function(){tone(170,.28,'sawtooth',.05);},
+  alert:function(){tone(440,.12,'square',.04);tone(330,.2,'square',.04,.14);}
+};
+
+/* ---------- estado ---------- */
+var S=null;
+function newGame(){
+  S={wx:['sun','sun','cloud','rain'][Math.floor(Math.random()*4)],friend:['Tomi','Lupe','Beni','Mía','Nico','Sofi'][Math.floor(Math.random()*6)],idle:0,played:false,hugged:false,rescued:false,predN:0,predOk:0,pred:null,alertHigh:-999,lowI:0,log:[],dips:[],lowShown:false,slots:[false,false,false],emo:null,evCount:0,pendingEmo:'sad',evs:(function(){var sit=['gym','sick','bday'][Math.floor(Math.random()*3)],win={gym:[650,700],sick:[650,700],bday:[960,990]}[sit];return [{k:Math.random()<.5?'sad':'angry',t:Math.round(740+Math.random()*40)},{k:sit,t:Math.round(win[0]+Math.random()*(win[1]-win[0]))}].sort(function(a,b){return a.t-b.t;});})(),evi:0,apt:{t:Math.round(870+Math.random()*30),n:0},nextOk:0,hadSick:false,t:T0,g:115,insL:[],insRem:0,absorb:[],locks:[],full:0,play:0,eatT:0,happyT:0,
+     running:false,ended:false,modal:false,since:0,qi:0,qs:shuffle(QUESTIONS).slice(0,2),curQ:null,
+     samples:[{t:T0,g:115}],lastSample:T0,zc:{ok:1,low:0,high:0},
+     react:null,alertLow:-999,quizOk:0,quizN:0};
+}
+function locked(){return S.modal||S.ended||!!curSheet;}
+
+var svg=$('gl'),wrap=$('glwrap'),sayEl=$('say'),overlay=$('overlay'),tray=$('tray'),stage=$('stage'),scroller=$('scroller');
+var pupL=$('pupL'),pupR=$('pupR'),marker=$('marker'),app=$('app');
+var wxEl=$('wx'),foodBar=$('foodBar'),insBar=$('insBar'),doorEl=$('door'),doorTxt=$('doorLocks'),thoughtEl=$('thought'),orb=$('orb'),tint=$('tint'),starsEl=$('starfield'),lastDoor='',lastSky=-1,lastPt=0,ptCount=0,flowTog=false,lastZ='',keyBadge=$('keyBadge'),items=Array.prototype.slice.call(tray.querySelectorAll('.item'));
+var trendTxtEl=$('trendTxt'),trendEl=$('trend'),lastTrend='',clockEl=$('clock'),readoutEl=$('readout'),numEl=$('num'),pctEl=$('pct'),sheet=$('sheet');
+/* velocidad de subida (índice glucémico simplificado) según el ritmo de absorción de cada comida */
+var TREND=[['⇈','sube rápido'],['↗','sube'],['→','estable'],['↘','baja'],['⇊','baja rápido']];
+var GI_TXT={none:'No sube',low:'Sube despacio',med:'Sube normal',fast:'Sube rápido',late:'Sube tarde y dura más'};
+items.forEach(function(it){
+  var f=FOODS[it.getAttribute('data-id')];if(!f)return;
+  var k=f.gi||'low';
+  var s=document.createElement('i');s.className='dot g-'+k;it.appendChild(s);
+  var tip=it.querySelector('.lb').textContent+'. '+GI_TXT[k]+(f.pk?'. Pico: '+f.pk+'. Efecto: '+f.du:'');
+  it.setAttribute('aria-label',tip);it.title=tip;
+});
+
+var lastFw=-1,lastIw=-1,nxC=null,nxT=0,lastReact=null,curMood='',lastLocks=-1,shown='',lastClock=-1,lastPulse='#',overGl=false;
+var lastZone='',lastNum=-1,lastPos='',lastPct='',ptr={x:0,y:0,d:false};
+
+/* ---------- simulador de curvas (ilustrativo) ---------- */
+var SIMIDS=['apple','banana','yogurt','milk','chicken','pasta','pizza','cookie','alfajor','cake','soda'],simFood='apple',simIns=false,simBuilt=false;
+function simDraw(){
+  var box=$('simFoods');
+  if(!simBuilt){
+    simBuilt=true;
+    box.innerHTML=SIMIDS.map(function(id){return '<button type="button" class="opt" role="radio" data-sim="'+id+'" aria-checked="false">'+FOODS[id].em+' '+tray.querySelector('[data-id="'+id+'"] .lb').textContent+'</button>';}).join('');
+  }
+  Array.prototype.forEach.call(box.children,function(b){b.setAttribute('aria-checked',b.getAttribute('data-sim')===simFood?'true':'false');});
+  $('simIns').setAttribute('aria-pressed',simIns?'true':'false');
+  var f=FOODS[simFood],V=f.locks.reduce(function(a,b){return a+b;},0);
+  var W=480,H=240,L=44,R=12,T=14,B=34,X1=360,y0=40,y1=300;
+  function X(t){return L+t/X1*(W-L-R);}
+  function Y(g){return T+(1-(clamp(g,y0,y1)-y0)/(y1-y0))*(H-T-B);}
+  var pf='',pi='',t,gf,gi;
+  for(t=0;t<=X1;t+=5){
+    gf=115+f.rise*tcdf(t,f.d,f.tp,f.dur)-(f.dip?f.dip*bump(t-(f.tp+10)):0);
+    gi=gf-V*tcdf(t,INS.d,INS.tp,INS.dur);
+    pf+=(t?'L':'M')+X(t).toFixed(1)+' '+Y(gf).toFixed(1);pi+=(t?'L':'M')+X(t).toFixed(1)+' '+Y(gi).toFixed(1);
+  }
+  var s='<svg class="chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Curva ilustrativa de glucosa después de comer '+NAMES[simFood]+(simIns?', con y sin insulina':'')+'">';
+  s+='<rect class="band-high" x="'+L+'" y="'+T+'" width="'+(W-L-R)+'" height="'+(Y(180)-T)+'"/><rect class="band-ok" x="'+L+'" y="'+Y(180)+'" width="'+(W-L-R)+'" height="'+(Y(70)-Y(180))+'"/><rect class="band-low" x="'+L+'" y="'+Y(70)+'" width="'+(W-L-R)+'" height="'+(H-B-Y(70))+'"/>';
+  [70,180].forEach(function(v){s+='<line class="guide" x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'"/><text x="'+(L-6)+'" y="'+(Y(v)+4)+'" text-anchor="end">'+v+'</text>';});
+  s+='<line class="axis" x1="'+L+'" x2="'+(W-R)+'" y1="'+(H-B)+'" y2="'+(H-B)+'"/>';
+  for(var m=0;m<=X1;m+=60)s+='<line class="tick" x1="'+X(m)+'" x2="'+X(m)+'" y1="'+(H-B)+'" y2="'+(H-B+5)+'"/><text x="'+X(m)+'" y="'+(H-B+21)+'" text-anchor="middle">'+(m/60)+' h</text>';
+  s+=simIns?'<path class="fline" d="'+pf+'"/><path class="line" d="'+pi+'"/>':'<path class="line" d="'+pf+'"/>';
+  $('simChart').innerHTML=s+'</svg>';
+  $('simInfo').textContent=NAMES[simFood].charAt(0).toUpperCase()+NAMES[simFood].slice(1)+': '+GI_TXT[f.gi].toLowerCase()+'. Pico aproximado: '+f.pk+'. Efecto: '+f.du+'.'+(simIns?' La línea punteada es sin insulina; la continua, con insulina rápida ilustrativa.':'');
+}
+$('simFoods').addEventListener('click',function(e){var b=e.target.closest('[data-sim]');if(b){simFood=b.getAttribute('data-sim');simDraw();}});
+$('simIns').addEventListener('click',function(){simIns=!simIns;simDraw();});
+
+/* ---------- escena: cielo, partículas, confeti ---------- */
+function emOf(id){var e=tray.querySelector('[data-id="'+id+'"] .em');return e?e.textContent:'';}
+function skyAt(t){
+  var p=clamp((t-T0)/(T1-T0),0,1),a,c='255,214,120';
+  if(t<540)a=.1*(1-(t-T0)/60);else if(t<960)a=0;
+  else if(t<1080){c='255,150,70';a=.16*(t-960)/120;}
+  else{c='24,34,110';a=.16+.28*(t-1080)/120;}
+  tint.style.background='rgb('+c+')';tint.style.opacity=Math.max(0,a).toFixed(3);
+  orb.style.left=(22+p*66).toFixed(1)+'%';orb.style.top=(14+64*(1-Math.sin(Math.PI*p))).toFixed(0)+'px';
+  orb.textContent=t>=1080?'🌙':'☀️';orb.style.opacity=(S&&S.wx&&S.wx!=='sun')?'.4':'1';
+  starsEl.style.opacity=t<1020?'0':Math.min(1,(t-1020)/120).toFixed(2);
+}
+function confetti(){
+  if(reduce||!document.body.animate)return;
+  var cols=['#FFC93C','#FF6F83','#2F6BFF','#12975F','#B7A6FF'];
+  for(var i=0;i<30;i++){
+    (function(){
+      var s=document.createElement('i');
+      s.style.cssText='position:fixed;left:'+(Math.random()*100)+'vw;top:-20px;width:9px;height:13px;border-radius:2px;pointer-events:none;z-index:80;background:'+cols[Math.floor(Math.random()*cols.length)];
+      document.body.appendChild(s);
+      var an=s.animate([{transform:'translate(0,0) rotate(0)',opacity:1},{transform:'translate('+((Math.random()-.5)*160)+'px,'+(innerHeight+40)+'px) rotate('+(360+Math.random()*540)+'deg)',opacity:.9}],{duration:1800+Math.random()*1600,delay:Math.random()*500,easing:'ease-in'});
+      an.onfinish=function(){if(s.parentNode)s.parentNode.removeChild(s);};
+      setTimeout(function(){if(s.parentNode)s.parentNode.removeChild(s);},4200);
+    })();
+  }
+}
+
+/* ---------- Gluco ---------- */
+function look(px,py){
+  var r=svg.getBoundingClientRect();
+  if(!r.width)return;
+  var cx=r.left+r.width*.5,cy=r.top+r.height*(114/235);
+  var dx=px-cx,dy=py-cy,d=Math.sqrt(dx*dx+dy*dy)||1,k=Math.min(1,d/180)*4.5;
+  var tr='translate('+(dx/d*k).toFixed(1)+'px,'+(dy/d*k).toFixed(1)+'px)';
+  pupL.style.transform=tr;pupR.style.transform=tr;
+}
+function say(text,ms,short){S.react={text:text,short:short||text,until:Date.now()+(ms||4500)};}
+function mood(){
+  if(S.ended)return 'sleep';
+  if(S.eatT>0)return 'eat';
+  if(overGl)return 'open';
+  if(S.g<70)return 'low';
+  if(S.emo)return S.emo.k;
+  if(S.play>0)return 'play';
+  if(S.g>180)return 'high';
+  if(S.happyT>0)return 'happy';
+  return 'ok';
+}
+function fx(emoji,n){
+  for(var i=0;i<(n||1);i++){
+    (function(i){
+      var s=document.createElement('span');
+      s.className='fx';s.textContent=emoji;
+      s.style.left=(25+Math.random()*50)+'%';s.style.top=(30+Math.random()*16)+'%';
+      s.style.animationDelay=(i*.12)+'s';
+      wrap.appendChild(s);
+      setTimeout(function(){if(s.parentNode)s.parentNode.removeChild(s);},1500);
+    })(i);
+  }
+}
+/* Qué debería hacer ahora: es el único mensaje fijo */
+function nextAction(){
+  if(S.ended)return {id:null,msg:'Zzz... ¡Gracias por cuidarme! Buenas noches.',short:'Zzz... ¡Gracias!'};
+  if(!S.running)return {id:'apple',msg:'¡Hola! Soy '+pet.name+' y tengo hambre. Arrastrá una comida hasta mí. El día empieza cuando me des de comer.',short:'¡Tengo hambre! Dame de comer.'};
+  if(S.g<70)return {id:'juice',msg:'¡Estoy temblando! Mi glucosa está baja. Dame el jugo o un poco de azúcar.',short:'¡Estoy bajo! Jugo o azúcar.'};
+  if(S.emo&&S.emo.k==='sick')return {id:'water',msg:'Estoy resfriado y mi glucosa sube. Dame agua y avisá a un adulto.',short:'Estoy enfermo. Dame agua.'};
+  if(S.emo)return {id:null,msg:S.emo.k==='sad'?'Estoy triste y mi glucosa se mueve. Tocame para darme un abrazo y escucharme.':'Estoy enojado y mi glucosa se mueve. Tocame para darme un abrazo y calmarme.',short:'Estoy mal. ¡Tocame para un abrazo!'};
+  if(S.locks.length&&S.g>180)return {id:null,msg:'Mi glucosa está alta y tengo cerraduras cerradas. La llave 🔑 representa mi insulina; en la vida real la indica el equipo de salud.',short:'Estoy alto y con cerraduras cerradas.'};
+  if(S.locks.length)return {id:null,msg:'Tengo cerraduras cerradas. En la vida real, la insulina la indica mi equipo de salud. Acá la llave 🔑 es solo un juego.',short:'Mis cerraduras siguen cerradas.'};
+  if(S.g>180)return {id:S.play>0?null:'ball',msg:'Mi glucosa está alta. Un rato de pelota ayuda a bajarla. Si pasa seguido, avisá a un adulto.',short:'Estoy alto. ¡A jugar a la pelota!'};
+  var cs=slotOf(S.t);
+  var cf=[SLOT_FOOD[cs],'apple','yogurt'].filter(function(x){return S.full+FOODS[x].full<=4.01;})[0];
+  if(cf&&!S.slots[cs]&&S.t>=SLOT_START[cs]+45)return {id:cf,msg:'Es hora de '+SLOT_NAME[cs]+'. ¿Me das algo rico? Para tener energía necesito comer.',short:'Es hora de comer.'};
+  if(S.since>120)return {id:'milk',msg:'Hace rato que no como. ¿Me das algo rico?',short:'¿Me das algo rico?'};
+  var la=S.absorb.filter(function(a){return FOODS[a.id].gi==='late'&&a.age>45;})[0];
+  if(la)return {id:null,msg:'Comí '+NAMES[la.id]+' hace un rato. Mi glucosa puede seguir cambiando porque esta comida tiene un efecto prolongado.',short:'Mi comida sigue actuando.'};
+  if(S.insRem>8)return {id:null,msg:'La insulina que recibí sigue trabajando. ¡Todavía tiene efecto!',short:'La insulina sigue actuando.'};
+  return {id:null,msg:'¡Todo bien! Estoy en la zona verde. Seguí atento a mi nivel.',short:'¡Todo bien! Zona verde.'};
+}
+
+/* ---------- acciones ---------- */
+function feed(id){
+  var f=FOODS[id];
+  var rescue=id==='juice'||id==='sugar';
+  S.idle=0;
+  if(!rescue&&S.full+f.full>4.01){say('¡Uf, estoy llenísimo! Ahora no me entra nada más.',3200,'¡Estoy lleno!');fx('😮‍💨',2);sfx.bad();return false;}
+  S.full+=f.full;
+  var ab=f.rise>0?newAbs(id,f.rise):null,lk=f.locks,vm='';
+  if(id==='banana'){
+    if(Math.random()<.5){ab.R=55*AMP;ab.tp=40;ab.dur=140;lk=[55];vm='¡Está bien madura! Sube más rápido.';}
+    else{ab.R=36*AMP;ab.tp=75;ab.dur=170;lk=[35];vm='Está verde-amarilla: sube más despacio.';}
+  }else if(id==='chicken'){
+    if(Math.random()<.5){ab.R=14*AMP;lk=[15];vm='Pollo con ensalada: casi no mueve mi glucosa.';}
+    else{ab.R=48*AMP;ab.tp=110;lk=[40];vm='Vino con papas o arroz: ahora sí sube un poco, y tarde.';}
+  }
+  if(ab)S.absorb.push(ab);
+  if(id!=='water')S.log.push({t:S.t,k:'f',id:id});
+  if(f.rise>=30&&!rescue)S.slots[slotOf(S.t)]=true;
+  lk.forEach(function(v){S.locks.push(v);});
+  S.eatT=1.6;S.since=0;S.running=true;
+  var msg=f.say,sh=f.short;
+  if(id==='water'){
+    if(S.g>180){S.g=clamp(S.g-8,35,320);msg='¡Glup! El agua ayuda cuando la glucosa está alta.';sh='¡Glup! Me ayuda.';}
+    if(S.emo&&S.emo.k==='sick'){S.emo.left=Math.min(S.emo.left,45);msg='¡Glup! El agua ayuda cuando estoy enfermo. Avisá a un adulto.';sh='¡Glup! Me ayuda. Avisá a un adulto.';}
+  }else if(rescue){
+    if(S.g<70){msg='¡Eso necesitaba! Lo dulce sube la glucosa rápido.';sh='¡Eso! Lo dulce me sube.';S.happyT=2;}
+    else{msg='Ñam... pero no hacía falta: ahora mi glucosa va a subir de más.';sh='¡Ñam! Pero ya estaba bien.';}
+  }else if(vm){msg=vm;sh=vm;}
+  if(rescue&&S.g<70)S.rescued=true;
+  if(f.gi==='fast'||f.gi==='late')fx('😋',2);
+  if(!rescue&&S.predN<1&&!S.pred&&S.t>=600&&(f.gi==='fast'||f.gi==='late'||f.gi==='low'))S.pred={t:S.t+15,id:id};
+  say(msg,5500,sh);fx(f.em,3);sfx.eat();
+  return true;
+}
+function useKey(){
+  S.idle=0;
+  if(!S.running){say('Primero dame de comer. La llave se usa después.',3500,'Primero, comida.');sfx.bad();return;}
+  if(!S.locks.length){say('No hay nada que abrir. La llave se usa después de comer.',3500,'Nada que abrir.');sfx.bad();return;}
+  if(S.g<70){say('Con la glucosa baja no se usa insulina: se toma algo dulce, como jugo o azúcar.',5000,'Estoy bajo: jugo, no llave.');sfx.bad();return;}
+  var v=S.locks.shift();S.log.push({t:S.t,k:'k'});
+  S.insL.push({v:v,age:0});S.insRem+=v;S.happyT=1.4;
+  say(S.locks.length?'¡Clic! Falta abrir una cerradura más.':'¡Clic! La insulina empieza a trabajar, pero tarda un rato en hacer efecto.',5000,S.locks.length?'¡Clic! Falta una.':'¡Clic! Tarda un rato en actuar.');
+  sfx.key();fx('🔓',2);
+}
+function playBall(){
+  if(!S.running){say('Primero dame de comer, así tengo energía.',3500,'Primero, comida.');sfx.bad();return;}
+  if(S.g<70){say('¡Así no puedo jugar! Primero necesito algo dulce.',4500,'Estoy bajo. No puedo.');sfx.bad();return;}
+  if(S.play>0)return;
+  S.idle=0;S.played=true;
+  S.play=30;
+  say('¡A jugar a la pelota! Moverme gasta glucosa y la hace bajar.',4500,'¡A jugar! Bajo la glucosa.');sfx.good();
+}
+function useItem(id){
+  if(!S||locked())return;
+  if(S.play>0&&id!=='key'&&id!=='juice'&&id!=='sugar'){say('¡Esperá que termine el partido!',2200,'¡Esperá el partido!');return;}
+  if(FOODS[id])feed(id);
+  else if(id==='key')useKey();
+  else if(id==='ball')playBall();
+}
+
+/* ---------- simulación ---------- */
+function step(dt){
+  var dm=dt*SPEEDS[DB.speed];
+  S.t+=dm;S.since+=dm;
+  var g=S.g;
+  var ab=S.absorb,i,a;
+  for(i=ab.length-1;i>=0;i--){
+    a=ab[i];g+=a.R*tri(a.age+dm/2,a.d,a.tp,a.dur)*dm;
+    if(a.dip&&!a.dd&&a.age>=a.tp+10){a.dd=1;S.dips.push({D:a.dip,age:0});}
+    a.age+=dm;
+    if(a.age>=a.dur)ab.splice(i,1);
+  }
+  var dp=S.dips;
+  for(i=dp.length-1;i>=0;i--){a=dp[i];g-=a.D*(bump(a.age+dm)-bump(a.age));a.age+=dm;if(a.age>=90)dp.splice(i,1);}
+  var il=S.insL,rem=0;
+  for(i=il.length-1;i>=0;i--){
+    a=il[i];g-=a.v*tri(a.age+dm/2,INS.d,INS.tp,INS.dur)*dm;a.age+=dm;
+    if(a.age>=INS.dur)il.splice(i,1);else rem+=a.v*(1-tcdf(a.age,INS.d,INS.tp,INS.dur));
+  }
+  S.insRem=rem;
+  S.full=Math.max(0,S.full-dm*.012);
+  if(S.emo){g+=(S.emo.k==='sick'?.3:.45)*dm;S.emo.left-=dm;if(S.emo.left<=0)S.emo=null;}
+  if(S.play>0){var p=Math.min(S.play,dm);S.play-=p;g-=1.1*p;}
+  if(S.since>150&&g>60)g-=.2*dm;
+  S.g=clamp(g,35,320);
+  if(S.play>0&&S.g<65){S.play=0;say('Tuve que parar de jugar: mi glucosa bajó mucho.',5000,'Paré: estoy bajo.');}
+  while(S.t>=S.lastSample+5){
+    S.lastSample+=5;
+    S.samples.push({t:S.lastSample,g:S.g});
+    S.zc[zone(S.g)]++;
+  }
+  if(zone(S.g)==='low'&&S.t-S.alertLow>30){S.alertLow=S.t;sfx.alert();}
+  if(zone(S.g)==='high'&&S.t-S.alertHigh>90){S.alertHigh=S.t;tone(330,.18,'triangle',.05);}
+  if(zone(S.g)==='low'&&!S.lowShown){S.lowShown=true;S.nextOk=S.t+GAP;openLow();return;}
+  var calm=S.t>=S.nextOk&&!S.emo&&S.eatT<=0&&S.play<=0&&!(S.react&&Date.now()<S.react.until);
+  if(S.evi<S.evs.length&&S.t>=S.evs[S.evi].t&&calm){S.nextOk=S.t+GAP;openEvent();return;}
+  if(S.apt&&S.t>=S.apt.t&&calm){
+    if(!S.slots[slotOf(S.t)]){S.apt=null;S.nextOk=S.t+GAP;openSit('appetite');return;}
+    S.apt=S.apt.n===0?{t:Math.round(1000+Math.random()*30),n:1}:null;
+  }
+  if(S.pred&&S.t>=S.pred.t&&calm){S.nextOk=S.t+GAP;openPred();return;}
+  if(S.qi<S.qs.length&&S.t>=QTIMES[S.qi]&&calm){S.nextOk=S.t+GAP;openQuiz();return;}
+  if(S.t>=T1){S.t=T1;finish();}
+}
+
+/* ---------- ventanas ---------- */
+function showOverlay(html,focusSel){
+  overlay.innerHTML=html;overlay.hidden=false;S.modal=true;tray.inert=true;S.react=null;stage.classList.add('ovl');
+  var f=focusSel&&overlay.querySelector(focusSel);
+  if(f)try{f.focus({preventScroll:true});}catch(e){}
+}
+function closeOverlay(){stage.classList.remove('ovl');overlay.hidden=true;overlay.innerHTML='';S.modal=false;tray.inert=false;}
+function openIntro(){
+  showOverlay('<div class="ocard"><h2>¡Hola! Soy '+esc(pet.name)+'</h2><p>Tengo diabetes. Hoy me ayudás a cuidar mi día, de 8 a 20 horas.</p>'+
+  '<ol class="how"><li><span class="n">🍎</span><span><b>Dame de comer.</b></span></li>'+
+  '<li><span class="n">🔑</span><span><b>La llave 🔑</b> abre mis cerraduras.</span></li>'+
+  '<li><span class="n">🟢</span><span><b>Cuidá mi nivel:</b> que coma a lo largo del día y pase el 70% en la zona verde.</span></li></ol>'+
+  '<button class="btn sun" type="button" data-act="start">¡Vamos!</button>'+
+  (DB.best!==null?'<p class="best">🏆 Tu mejor día: '+Number(DB.best)+'% en zona verde</p>':'')+
+  '<p class="small">Es un juego: la insulina real y su dosis las indica siempre el equipo de salud.</p>'+
+  '<details class="cust"><summary>🎨 Personalizar a '+esc(pet.name)+'</summary>'+
+  '<div class="field"><label class="lab" for="nameIn">¿Cómo me llamo?</label><input type="text" id="nameIn" maxlength="12" value="'+esc(pet.name)+'" autocomplete="off"></div>'+
+  '<div class="field"><span class="lab" id="colLab">¿De qué color soy?</span><div class="swatches" role="radiogroup" aria-labelledby="colLab">'+
+  COLORS.map(function(c){return '<button type="button" class="sw" role="radio" aria-checked="'+(c[1]===pet.color)+'" aria-label="'+c[0]+'" data-act="color" data-v="'+c[1]+'" style="--c:'+c[1]+'"></button>';}).join('')+
+  '</div></div>'+
+  '<div class="field"><span class="lab" id="accLab">¿Qué me pongo? <small>(se gana con estrellas: tenés '+DB.stars+' ⭐)</small></span><div class="opts" role="radiogroup" aria-labelledby="accLab">'+
+  ACCS.map(function(a){var ok=DB.stars>=a.need;return '<button type="button" class="opt" role="radio" data-act="acc" data-v="'+a.id+'" aria-checked="'+(a.id===pet.acc)+'"'+(ok?'':' disabled')+'>'+(ok?a.em+' '+a.name:'🔒 '+a.need+' ⭐')+'</button>';}).join('')+
+  '</div></div>'+
+  '<div class="field"><span class="lab" id="spLab">¿Qué ritmo?</span><div class="opts" role="radiogroup" aria-labelledby="spLab">'+
+  '<button type="button" class="opt" role="radio" data-act="speed" data-v="calm" aria-checked="'+(DB.speed==='calm')+'">🐢 Tranquilo</button>'+
+  '<button type="button" class="opt" role="radio" data-act="speed" data-v="normal" aria-checked="'+(DB.speed==='normal')+'">🐇 Normal</button></div></div>'+
+  '</details></div>','[data-act="start"]');
+}
+var LOWSTEPS=[['✋','Parar lo que estoy haciendo'],['🧑‍🧒','Avisar a un adulto'],['🧃','Tomar algo dulce, como jugo o azúcar'],['⏱️','Esperar y volver a mirar mi nivel']];
+function openLow(){
+  S.lowI=0;
+  var order=shuffle([0,1,2,3]);
+  showOverlay('<div class="ocard"><p class="eyebrow">¡Atención!</p><h2>Mi glucosa está baja</h2><p id="lowHint">¿En qué orden lo hacemos? Tocá los pasos, de a uno.</p><div class="col" id="lowSteps">'+
+    order.map(function(n){return '<button class="btn alt lowstep" type="button" data-act="lowstep" data-n="'+(n+1)+'"><span>'+LOWSTEPS[n][0]+'</span><span>'+LOWSTEPS[n][1]+'</span></button>';}).join('')+
+    '</div><button class="btn sun" type="button" data-act="qnext" id="lowGo" hidden>¡Entendido!</button></div>','[data-act="lowstep"]');
+}
+function lowStep(b){
+  var n=+b.getAttribute('data-n');
+  if(n===S.lowI+1){
+    S.lowI++;b.classList.add('done');b.disabled=true;b.firstChild.textContent='✅';sfx.good();
+    $('lowHint').textContent=S.lowI<4?'¡Bien! ¿Y después?':'¡Eso es! Ahora ayudame con lo que necesito.';
+    if(S.lowI===4){var g=$('lowGo');g.hidden=false;try{g.focus({preventScroll:true});}catch(e){}}
+  }else{
+    b.classList.remove('bad');void b.offsetWidth;b.classList.add('bad');sfx.bad();
+    $('lowHint').textContent='Casi. Primero va: '+LOWSTEPS[S.lowI][1].toLowerCase()+'.';
+  }
+}
+function openSit(k){
+  var s=SITS[k];
+  showOverlay('<div class="ocard"><p class="eyebrow">'+esc(pet.name)+' te cuenta</p><h2>'+s.em+' '+s.t+'</h2><p>'+s.p+'</p><div class="col">'+
+    s.o.map(function(o){return '<button class="btn alt" type="button" data-act="sit" data-k="'+k+'" data-v="'+o[1]+'">'+o[0]+'</button>';}).join('')+'</div></div>','[data-act="sit"]');
+}
+function sitChoice(k,v){
+  var said=function(m,s){say(m,6500,s);};
+  if(k==='gym'){
+    if(v==='fruit'){if(feed('apple'))said('¡Bien pensado! Con una fruta antes de correr tengo energía. '+S.friend+' viene conmigo. Corriendo gasto glucosa: ¡atento a mi nivel!','¡Bien! Fruta antes de correr.');}
+    else said('Voy a correr sin comer: gasto glucosa y puedo bajar. '+S.friend+' me espera. ¡Atento a mi nivel!','¡Atento! Puedo bajar.');
+    S.play=45;S.played=true;fx('🧒',2);
+  }else if(k==='bday'){
+    if(v==='cake'){if(feed('cake'))said(S.friend+' me convida torta. Una vez en cuando se puede, siempre con el plan del equipo de salud.','¡Rico! Una vez en cuando.');}
+    else if(v==='fruit'){if(feed('apple'))said('¡Buena elección! La fruta sube la glucosa despacito.','¡Bien! Fruta: sube despacito.');}
+    else said('¡A jugar con '+S.friend+' y mis amigos! No hace falta comer todo lo que hay en la fiesta.','¡A jugar con mis amigos!');
+  }else if(k==='sick'){
+    S.emo={k:'sick',left:v==='water'?60:120};S.hadSick=true;
+    if(v==='water'){if(feed('water'))said('El agua ayuda cuando estoy enfermo. Y hay que avisar a un adulto.','¡Glup! Avisá a un adulto.');}
+    else said('Cuando estoy enfermo mi glucosa sube. ¡Hay que avisar a un adulto y tomar agua!','Estoy enfermo. ¡Avisá a un adulto!');
+  }else if(k==='appetite'){
+    S.insL.push({v:50,age:0});S.insRem+=50;
+    if(v==='small'){S.absorb.push(newAbs('apple',45));S.slots[slotOf(S.t)]=true;S.eatT=1.6;S.since=0;fx('🍎',3);sfx.eat();said('¡Bien! Un poquito alcanza para acompañar mi insulina. Si cuesta comer, se avisa a un adulto.','¡Bien! Un poquito alcanza.');}
+    else if(v==='juice'){S.absorb.push(newAbs('juice',50));S.eatT=1.6;S.since=0;fx('🧃',3);sfx.eat();said('El jugo sube rápido y sirve, pero dura poco. ¡Mirá mi nivel!','El jugo sirve, pero dura poco.');}
+    else said('Con la llave abierta y sin comer mi glucosa puede bajar. ¡Atento a mi nivel!','¡Atento! Puedo bajar.');
+  }
+}
+function openEvent(){
+  var e=S.evs[S.evi];S.evi++;
+  if(!EVENTS[e.k]){openSit(e.k);return;}
+  S.pendingEmo=e.k;
+  var story=EVENTS[e.k][Math.floor(Math.random()*EVENTS[e.k].length)];
+  showOverlay('<div class="ocard"><p class="eyebrow">'+esc(pet.name)+' te cuenta</p><h2>'+(e.k==='sad'?'😢 ':'😠 ')+story+'</h2><p>'+(e.k==='sad'?'Se siente triste.':'Está enojado.')+' Las emociones fuertes también pueden mover la glucosa.</p><button class="btn sun" type="button" data-act="evok">Escucharlo 👂</button></div>','[data-act="evok"]');
+}
+function openQuiz(){
+  var q=S.qs[S.qi];S.qi++;S.quizN++;S.curQ=q;
+  showOverlay('<div class="ocard"><p class="eyebrow">'+esc(pet.name)+' pregunta · '+S.qi+' de '+S.qs.length+'</p><h2>'+q.t+'</h2>'+
+  '<div class="answers"><button class="big mito" type="button" data-act="qa" data-v="mito">✕ Mito</button><button class="big real" type="button" data-act="qa" data-v="realidad">✓ Realidad</button></div></div>','[data-act="qa"]');
+}
+var PREDWHY={fast:'El azúcar rápida hace que la glucosa suba enseguida y después puede bajar de golpe.',late:'La grasa hace que la glucosa suba más tarde y dure más tiempo.',slow:'La fruta, la fibra y la proteína hacen que la glucosa suba de a poco.'};
+var PRED={fast:'⚡ Sube rápido y después puede bajar',late:'🐢 Sube más tarde y dura más',slow:'🌱 Sube despacito'};
+function openPred(){
+  var id=S.pred.id,f=FOODS[id];S.predN++;
+  showOverlay('<div class="ocard"><p class="eyebrow">'+esc(pet.name)+' pregunta</p><h2>'+f.em+' Comí '+NAMES[id]+'. ¿Qué creés que va a pasar con mi glucosa?</h2><div class="col">'+
+    ['fast','late','slow'].map(function(k){return '<button class="btn alt" type="button" data-act="pred" data-v="'+k+'">'+PRED[k]+'</button>';}).join('')+'</div></div>','[data-act="pred"]');
+}
+function answerPred(v){
+  var id=S.pred.id,gi=FOODS[id].gi,exp=gi==='fast'?'fast':(gi==='late'?'late':'slow'),ok=v===exp;
+  if(ok){S.predOk++;S.happyT=2.5;sfx.good();}else sfx.bad();
+  S.pred=null;
+  overlay.innerHTML='<div class="ocard"><div class="fb '+(ok?'fb-ok':'')+'"><strong>'+(ok?'¡Acertaste!':'Casi.')+' '+PRED[exp]+'.</strong><p>'+PREDWHY[exp]+'</p></div><button class="btn" type="button" data-act="qnext">Seguir jugando</button></div>';
+  var nb=overlay.querySelector('[data-act="qnext"]');if(nb)try{nb.focus({preventScroll:true});}catch(e){}
+}
+function answerQuiz(v){
+  var q=S.curQ,ok=v===q.a;
+  if(ok){S.quizOk++;S.happyT=2.5;sfx.good();}else sfx.bad();
+  overlay.innerHTML='<div class="ocard"><div class="fb '+(ok?'fb-ok':'')+'"><strong>'+(ok?'¡Bien, lo sabías!':'Casi.')+' Es '+(q.a==='mito'?'un mito.':'una realidad.')+'</strong><p>'+q.why+'</p></div><button class="btn" type="button" data-act="qnext">Seguir →</button></div>';
+  var nb=overlay.querySelector('[data-act="qnext"]');
+  if(nb)try{nb.focus({preventScroll:true});}catch(e){}
+}
+function pick(act,v){
+  Array.prototype.forEach.call(overlay.querySelectorAll('[data-act="'+act+'"]'),function(b){b.setAttribute('aria-checked',b.getAttribute('data-v')===v?'true':'false');});
+}
+function setColor(c){pet.color=c;stage.style.setProperty('--gluco',c);pick('color',c);}
+function setAcc(id){
+  pet.acc=id;
+  ACCS.forEach(function(a){var g=$('acc-'+a.id);if(g)g.style.display=a.id===id?'':'none';});
+  pick('acc',id);
+}
+overlay.addEventListener('click',function(e){
+  var b=e.target.closest('[data-act]');if(!b)return;
+  var a=b.getAttribute('data-act');
+  if(a==='color'){setColor(b.getAttribute('data-v'));}
+  else if(a==='acc'){setAcc(b.getAttribute('data-v'));}
+  else if(a==='speed'){DB.speed=b.getAttribute('data-v')==='calm'?'calm':'normal';pick('speed',DB.speed);save();}
+  else if(a==='start'){
+    var n=$('nameIn');
+    pet.name=((n&&n.value)||'').trim().slice(0,12)||'Gluco';
+    $('brand').textContent='El Día de '+pet.name;
+    DB.acc=pet.acc;DB.pn=pet.name;DB.pc=pet.color;save();
+    closeOverlay();sfx.good();
+  }
+  else if(a==='qa'){answerQuiz(b.getAttribute('data-v'));}
+  else if(a==='lowstep'){lowStep(b);}
+  else if(a==='pred'){answerPred(b.getAttribute('data-v'));}
+  else if(a==='qnext'){closeOverlay();}
+  else if(a==='sit'){closeOverlay();sitChoice(b.getAttribute('data-k'),b.getAttribute('data-v'));}
+  else if(a==='evok'){closeOverlay();S.emo={k:S.pendingEmo,left:90};S.evCount++;}
+});
+var SND=[['🔊','Efectos activados. Tocá para activar la música','Efectos'],['🎵','Música y efectos activados. Tocá para apagar todo','Música'],['🔇','Sonido apagado. Tocá para activar los efectos','Silencio']],sndI=0,music=false,mNext=0,mi=0;
+var NOTES=[392,440,523,587,659,784],MEL=[2,4,3,1,2,0,1,3];
+$('soundBtn').addEventListener('click',function(){
+  sndI=(sndI+1)%3;muted=sndI===2;music=sndI===1;
+  this.textContent=SND[sndI][0]+' '+SND[sndI][2];this.setAttribute('aria-label',SND[sndI][1]);
+});
+$('xlBtn').addEventListener('click',function(){
+  easy=!easy;app.classList.toggle('xl',easy);this.setAttribute('aria-pressed',easy?'true':'false');
+  shown='';
+});
+function openSheet(el,from){
+  if(curSheet)return;
+  curSheet=el;sheetOpener=from||null;el.hidden=false;el.scrollTop=0;
+  try{el.querySelector('[data-close]').focus({preventScroll:true});}catch(e){}
+}
+function closeSheet(){
+  if(!curSheet)return;
+  curSheet.hidden=true;curSheet=null;
+  try{if(sheetOpener)sheetOpener.focus({preventScroll:true});}catch(e){}
+}
+$('adultsBtn').addEventListener('click',function(){openSheet(sheet,$('menuBtn'));});
+$('simBtn').addEventListener('click',function(){openSheet($('sim'),$('menuBtn'));simDraw();});
+$('dictBtn').addEventListener('click',function(){openSheet($('dict'),$('menuBtn'));});
+var menu=$('menu'),menuBtn=$('menuBtn');
+function setMenu(on){menu.hidden=!on;menuBtn.setAttribute('aria-expanded',on?'true':'false');}
+menuBtn.addEventListener('click',function(e){e.stopPropagation();setMenu(menu.hidden);});
+menu.addEventListener('click',function(e){if(e.target.closest('button'))setMenu(false);});
+document.addEventListener('click',function(e){if(!menu.hidden&&!e.target.closest('.menuwrap'))setMenu(false);});
+[sheet,$('dict'),$('sim')].forEach(function(el){
+  el.addEventListener('click',function(e){if(e.target===el||e.target.closest('[data-close]'))closeSheet();});
+});
+window.addEventListener('keydown',function(e){if(e.key==='Escape'){setMenu(false);closeSheet();}});
+function slide(dir){try{scroller.scrollBy({left:dir*280,behavior:'smooth'});}catch(e){}}
+$('prev').addEventListener('click',function(){slide(-1);});
+$('next').addEventListener('click',function(){slide(1);});
+function focusItem(id){
+  var it=scroller.querySelector('[data-id="'+id+'"]');
+  if(!it)return;
+  try{scroller.scrollTo({left:it.offsetLeft-(scroller.clientWidth-it.offsetWidth)/2,behavior:reduce?'auto':'smooth'});}catch(e){}
+}
+
+/* ---------- arrastrar ---------- */
+var drag=null,ghost=null;
+function overGluco(x,y){var r=wrap.getBoundingClientRect(),m=16;return x>r.left-m&&x<r.right+m&&y>r.top-m&&y<r.bottom+m;}
+function makeGhost(){ghost=document.createElement('div');ghost.className='ghost';ghost.innerHTML=drag.it.querySelector('.em').innerHTML;document.body.appendChild(ghost);}
+function killGhost(g){if(g&&g.parentNode)g.parentNode.removeChild(g);}
+function flyIn(g){
+  if(!g)return;
+  if(reduce||!g.animate){killGhost(g);return;}
+  var r=svg.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height*(152/235);
+  var an=g.animate([{transform:g.style.transform+' scale(1)',opacity:1},{transform:'translate('+(x-26)+'px,'+(y-32)+'px) scale(.2)',opacity:.2}],{duration:240,easing:'ease-in'});
+  an.onfinish=function(){killGhost(g);};
+  setTimeout(function(){killGhost(g);},600);
+}
+tray.addEventListener('pointerdown',function(e){
+  var it=e.target.closest('.item');
+  if(!it||(e.button&&e.button>0))return;
+  drag={id:it.getAttribute('data-id'),it:it,x:e.clientX,y:e.clientY,moved:false,pid:e.pointerId};
+  try{it.setPointerCapture(e.pointerId);}catch(_){}
+});
+window.addEventListener('pointermove',function(e){
+  ptr.x=e.clientX;ptr.y=e.clientY;ptr.d=true;
+  if(!drag||e.pointerId!==drag.pid)return;
+  if(!drag.moved&&Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>8){drag.moved=true;makeGhost();}
+  if(drag.moved&&ghost){
+    ghost.style.transform='translate('+(e.clientX-26)+'px,'+(e.clientY-32)+'px)';
+    var o=overGluco(e.clientX,e.clientY);
+    wrap.classList.toggle('hover',o);
+    overGl=o&&!!FOODS[drag.id]&&!locked();
+  }
+});
+function endDrag(e,cancel){
+  if(!drag)return;
+  var d=drag;drag=null;var gh=ghost;ghost=null;
+  wrap.classList.remove('hover');overGl=false;
+  if(cancel){killGhost(gh);return;}
+  if(d.moved&&overGluco(e.clientX,e.clientY)&&FOODS[d.id]&&S&&!locked())flyIn(gh);else killGhost(gh);
+  if(!d.moved||overGluco(e.clientX,e.clientY))useItem(d.id);
+  else if(S&&!locked())say('¡Casi! Arrastrá '+NAMES[d.id]+' hasta mí.',2600,'¡Casi! Llevalo hasta mí.');
+}
+window.addEventListener('pointerup',function(e){if(drag&&e.pointerId===drag.pid)endDrag(e,false);});
+window.addEventListener('blur',function(){endDrag(null,true);});
+window.addEventListener('pointercancel',function(e){if(drag&&e.pointerId===drag.pid)endDrag(e,true);});
+tray.addEventListener('click',function(e){
+  if(e.detail!==0)return;
+  var it=e.target.closest('.item');if(it)useItem(it.getAttribute('data-id'));
+});
+tray.addEventListener('contextmenu',function(e){e.preventDefault();});
+svg.addEventListener('click',function(){
+  if(!S||locked())return;
+  if(S.emo&&S.emo.k==='sick'){say('Me siento mal. Dame agua y avisá a un adulto.',3500,'Estoy mal. Agua, por favor.');return;}
+  S.idle=0;
+  if(S.emo){S.emo=null;S.hugged=true;S.happyT=2.5;fx('🤗',3);sfx.good();say('Gracias por escucharme. ¡Ya me siento mejor!',4500,'¡Gracias! Me siento mejor.');return;}
+  if(S.running){var w=why();if(w){S.happyT=1.2;fx('💙',2);tone(700,.08,'triangle');say(w[0],6000,w[1]);return;}}
+  S.happyT=1.2;fx('💙',2);tone(700,.08,'triangle');
+  say(['¡Jiji, me hacés cosquillas!','¡Hola, amigo!','¡Qué lindo día!'][Math.floor(Math.random()*3)],2400);
+});
+
+/* ¿Por qué mi glucosa cambia? */
+function why(){
+  var la=S.absorb.filter(function(a){return a.age>=a.d&&a.id!=='water';}).sort(function(a,b){return a.age-b.age;})[0];
+  if(S.g<70)return ['Estoy bajo. Puede pasar si la insulina sigue trabajando y hace rato que no como o me muevo. Necesito algo dulce.','Estoy bajo: algo dulce.'];
+  if(la&&la.age<la.tp)return ['Comí '+NAMES[la.id]+' y mi glucosa está subiendo. '+GI_TXT[FOODS[la.id].gi]+'.','Estoy subiendo por la comida.'];
+  if(la)return ['Ya pasó lo más fuerte de '+NAMES[la.id]+', pero todavía sigue actuando un rato.','Mi comida sigue actuando.'];
+  if(S.insRem>8)return ['La insulina que recibí sigue trabajando. Por eso mi glucosa puede ir bajando de a poco.','La insulina sigue actuando.'];
+  if(S.since>120)return ['Hace rato que no como, por eso mi glucosa va bajando de a poco.','Hace rato que no como.'];
+  return null;
+}
+
+/* ---------- interfaz ---------- */
+function ui(){
+  var m=mood();
+  if(ptr.d){ptr.d=false;look(ptr.x,ptr.y);}
+  if(m!==curMood){svg.setAttribute('class','m-'+m);wrap.classList.toggle('playing',m==='play');wrap.classList.toggle('need',m==='sad'||m==='angry');curMood=m;}
+  var mi=Math.floor(Math.min(S.t,T1));
+  if(mi!==lastClock){clockEl.textContent=(S.t>=1080?'🌙 ':'☀️ ')+fmt(mi);lastClock=mi;}
+  var pos=((clamp(S.g,40,300)-40)/260*100).toFixed(1)+'%';
+  if(pos!==lastPos){marker.style.bottom=pos;lastPos=pos;}
+  var z=zone(S.g);
+  if(z!==lastZone){lastZone=z;marker.className='marker z-'+z;readoutEl.className='readout z-'+z;}
+  if(z!==lastZ){if(z==='ok'&&lastZ&&S.running&&!S.ended)fx('⭐',4);lastZ=z;}
+  var sk=Math.floor(S.t/3);
+  if(sk!==lastSky){lastSky=sk;skyAt(S.t);}
+  var rn=Math.round(S.g);
+  if(rn!==lastNum){lastNum=rn;numEl.textContent=rn;}
+  var ti=2;
+  if(S.running){var sm=S.samples,dv=S.g-sm[Math.max(0,sm.length-4)].g;ti=dv>30?0:(dv>10?1:(dv<-30?4:(dv<-10?3:2)));}
+  if(ti!==lastTrend){lastTrend=ti;trendEl.textContent=TREND[ti][0];trendTxtEl.textContent=TREND[ti][1];readoutEl.classList.remove('tr-up','tr-down','tr-flat');readoutEl.classList.add(ti<2?'tr-up':(ti>2?'tr-down':'tr-flat'));trendEl.setAttribute('aria-label','Tendencia: '+TREND[ti][1]);trendEl.title=TREND[ti][1];}
+  if(S.locks.length!==lastLocks){
+    lastLocks=S.locks.length;
+    doorTxt.textContent=lastLocks?'🔒'+(lastLocks>1?'×'+lastLocks:''):'';
+    keyBadge.textContent=lastLocks;keyBadge.classList.toggle('on',lastLocks>0);
+  }
+  if(wxEl.getAttribute('data-w')!==S.wx){wxEl.setAttribute('data-w',S.wx);wxEl.className='wx '+(S.wx==='sun'?'':S.wx);}
+  var fr=0;S.absorb.forEach(function(a){fr+=a.R*(1-tcdf(a.age,a.d,a.tp,a.dur));});
+  var fw=Math.round(Math.min(100,fr/1.8)),iw=Math.round(Math.min(100,S.insRem/1.2));
+  if(fw!==lastFw){lastFw=fw;foodBar.style.setProperty('--w',fw+'%');foodBar.parentNode.classList.toggle('on',fw>0);}
+  if(iw!==lastIw){lastIw=iw;insBar.style.setProperty('--w',iw+'%');insBar.parentNode.classList.toggle('on',iw>0);}
+  var ds=S.locks.length?'shut':(S.insRem>2?'open':'');
+  if(ds!==lastDoor){lastDoor=ds;doorEl.setAttribute('class','door'+(ds?' '+ds:''));}
+  var nowMs=Date.now();
+  if(!nxC||nowMs-nxT>150||S.react!==lastReact){nxC=nextAction();nxT=nowMs;lastReact=S.react;}
+  var nx=nxC,live=S.react&&Date.now()<S.react.until;
+  var txt=live?(easy?S.react.short:S.react.text):(easy?nx.short:nx.msg);
+  if(txt!==shown){shown=txt;sayEl.textContent=txt;sayEl.classList.remove('pop');void sayEl.offsetWidth;sayEl.classList.add('pop');}
+  var pid=locked()?null:nx.id;
+  if(pid!==lastPulse){
+    lastPulse=pid;
+    items.forEach(function(it){it.classList.toggle('pulse',it.getAttribute('data-id')===pid);});
+    if(pid&&!drag)focusItem(pid);
+    thoughtEl.hidden=!pid;thoughtEl.textContent=pid?emOf(pid):'';
+  }
+  if(S.running){
+    var mc=(S.slots[0]?1:0)+(S.slots[1]?1:0)+(S.slots[2]?1:0);
+    var tot=S.zc.ok+S.zc.low+S.zc.high,pc='🍽️ '+mc+' · 🟢 '+Math.round(S.zc.ok/tot*100)+'%';
+    if(pc!==lastPct){lastPct=pc;pctEl.textContent=pc;pctEl.hidden=false;}
+  }
+}
+
+/* ---------- final ---------- */
+function resChart(){
+  var W=480,H=240,L=44,R=12,T=14,B=34,x0=T0,x1=T1,y0=40,y1=320;
+  function X(t){return L+(t-x0)/(x1-x0)*(W-L-R);}
+  function Y(g){return T+(1-(clamp(g,y0,y1)-y0)/(y1-y0))*(H-T-B);}
+  var smp=S.samples,mx=smp[0],mn=smp[0];
+  smp.forEach(function(p){if(p.g>mx.g)mx=p;if(p.g<mn.g)mn=p;});
+  var alt='Curva de glucosa del día. Máximo '+Math.round(mx.g)+'. Mínimo '+Math.round(mn.g)+'.';
+  var s='<svg class="chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+alt+'">';
+  s+='<rect class="band-high" x="'+L+'" y="'+T+'" width="'+(W-L-R)+'" height="'+(Y(180)-T)+'"/>';
+  s+='<rect class="band-ok" x="'+L+'" y="'+Y(180)+'" width="'+(W-L-R)+'" height="'+(Y(70)-Y(180))+'"/>';
+  s+='<rect class="band-low" x="'+L+'" y="'+Y(70)+'" width="'+(W-L-R)+'" height="'+(H-B-Y(70))+'"/>';
+  [70,180].forEach(function(v){s+='<line class="guide" x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'"/><text x="'+(L-6)+'" y="'+(Y(v)+4)+'" text-anchor="end">'+v+'</text>';});
+  s+='<line class="axis" x1="'+L+'" x2="'+(W-R)+'" y1="'+(H-B)+'" y2="'+(H-B)+'"/>';
+  for(var h=8;h<=20;h+=2){s+='<line class="tick" x1="'+X(h*60)+'" x2="'+X(h*60)+'" y1="'+(H-B)+'" y2="'+(H-B+5)+'"/><text x="'+X(h*60)+'" y="'+(H-B+21)+'" text-anchor="middle">'+h+':00</text>';}
+  var d='';smp.forEach(function(p,k){d+=(k?'L':'M')+X(p.t).toFixed(1)+' '+Y(p.g).toFixed(1);});
+  S.log.forEach(function(e,k){var x=X(e.t),y=T+11+(k%2)*13;s+='<line class="tick" x1="'+x+'" x2="'+x+'" y1="'+(T+14)+'" y2="'+(H-B)+'" stroke-dasharray="2 3"/><text x="'+x+'" y="'+y+'" text-anchor="middle" font-size="12">'+(e.k==='k'?'🔑':FOODS[e.id].em)+'</text>';});
+  return s+'<path class="line" d="'+d+'"/></svg>';
+}
+function today(){
+  try{return new Date().toLocaleDateString('es-UY',{day:'numeric',month:'long',year:'numeric'});}catch(e){return '';}
+}
+function whatHappened(){
+  var smp=S.samples,mx=smp[0],mn=smp[0],out=[];
+  smp.forEach(function(p){if(p.g>mx.g)mx=p;if(p.g<mn.g)mn=p;});
+  function before(t){var f=null;S.log.forEach(function(e){if(e.k==='f'&&e.t<=t&&t-e.t<=300)f=e;});return f;}
+  var f1=before(mx.t);
+  if(mx.g>180)out.push('⬆️ Mi punto más alto fue '+Math.round(mx.g)+' a las '+fmt(mx.t)+(f1?', después de comer '+NAMES[f1.id]+'.'+(FOODS[f1.id].gi==='late'?' Esa comida sube tarde y dura más.':(FOODS[f1.id].gi==='fast'?' Esa comida sube rápido.':'')):'.'));
+  else out.push('⬆️ Mi punto más alto fue '+Math.round(mx.g)+' a las '+fmt(mx.t)+': me mantuve en la zona verde.');
+  if(mn.g<70){var f2=before(mn.t);out.push('⬇️ Bajé a '+Math.round(mn.g)+' a las '+fmt(mn.t)+(S.log.some(function(e){return e.k==='k'&&e.t<mn.t&&mn.t-e.t<300;})?': la insulina seguía trabajando.':'.')+' Una glucosa baja se corrige con algo dulce.');}
+  else if(S.log.some(function(e){return e.k==='k';}))out.push('🔑 La insulina no baja la glucosa de golpe: tarda en actuar y sigue trabajando varias horas.');
+  return out;
+}
+function achievements(pct,meals){
+  var A=[['🛡️','Día sin bajones',S.zc.low===0],['🍽️','Comí a lo largo del día',meals===3],['🟢','Casi todo en verde',pct>=85],['🧃','Rescaté un bajo con algo dulce',S.rescued],['🤗','Buen amigo: escuché a Gluco',S.hugged],['⚽','Gran deportista',S.played],['🔮','Adivino de curvas',S.predN>0&&S.predOk===S.predN],['🧠','Sabelotodo',S.quizN>0&&S.quizOk===S.quizN]];
+  return A;
+}
+function chatQ(){
+  var q=[];
+  if(S.zc.low>0)q.push('¿Qué hiciste cuando Gluco estaba bajo? ¿Qué le diría un adulto?');
+  if(S.evCount)q.push('¿Cuándo te sentís triste o enojado? ¿Qué te ayuda a sentirte mejor?');
+  if(S.hadSick)q.push('¿Qué hacemos en casa cuando alguien está resfriado?');
+  if(S.zc.high>S.zc.ok*.3)q.push('¿Qué comida hizo subir más a Gluco? ¿Qué otra podría elegir?');
+  if(S.played)q.push('¿Qué te gusta jugar? ¿Qué conviene tener a mano cuando hacemos deporte?');
+  q.push('¿Qué fue lo más difícil de cuidar a Gluco hoy?');
+  return q[Math.floor(Math.random()*q.length)];
+}
+function finish(){
+  S.ended=true;
+  var tot=S.zc.ok+S.zc.low+S.zc.high,pct=Math.round(S.zc.ok/tot*100);
+  var meals=(S.slots[0]?1:0)+(S.slots[1]?1:0)+(S.slots[2]?1:0);
+  var stars=pct>=75?3:(pct>=50?2:1);
+  if(meals<3)stars=Math.min(stars,meals>=2?2:1);
+  var nm=esc(pet.name);
+  var head=stars===3?'¡Equilibrio total!':(stars===2?'¡Muy bien!':'Un día movido');
+  var txt=stars===3?'Mi glucosa estuvo casi todo el día en la zona verde. ¡Me cuidaste genial!':(stars===2?'Hubo algunos momentos fuera de la zona verde, pero aprendiste a corregirlos.':'Hoy mi glucosa subió y bajó bastante. Probá de nuevo y mirá cómo cambia la curva.');
+  var tips=['La insulina es la llave que deja entrar la glucosa a las células.'];
+  if(S.zc.high>S.zc.ok*.3)tips.push('La gaseosa y la torta hacen que la glucosa suba de golpe.');
+  else tips.push('La fruta y el pan integral hacen que la glucosa suba de a poco.');
+  if(S.hadSick)tips.push('Cuando estamos enfermos la glucosa puede subir: se toma agua y se avisa a un adulto.');
+  if(S.evCount)tips.push('La tristeza y el enojo también pueden mover la glucosa. Contarlo y recibir un abrazo ayuda.');
+  if(S.zc.low>0)tips.push('Cuando la glucosa baja, el jugo la sube rápido.');
+  else tips.push('Si la glucosa baja, hace falta algo dulce enseguida y avisar a un adulto.');
+  closeOverlay();
+  var prevStars=DB.stars;DB.stars+=stars;
+  var won=ACCS.filter(function(a){return a.need>prevStars&&a.need<=DB.stars;}),nxt=ACCS.filter(function(a){return a.need>DB.stars;})[0];
+  var full3=meals===3;
+  var prev=DB.best,isBest=full3&&(prev===null||pct>prev),rec={d:today(),p:pet.name,pct:pct,s:stars,n:DB.me};
+  if(isBest)DB.best=pct;
+  DB.log.unshift(rec);DB.log=DB.log.slice(0,5);save();
+  var bestMsg=!full3?'🍽️ Para sumar al récord hay que comer a lo largo de todo el día.':prev===null?'🏆 Primer día guardado. ¡Ahora probá superarlo!':(isBest?'🏆 ¡Nuevo mejor día!':'🏆 Tu mejor día: '+DB.best+'%. ¡Probá superarlo!');
+  var days=DB.log.length>1?'<h3>Tus últimos días</h3><ul class="days">'+DB.log.map(function(x){
+    var s=Math.max(1,Math.min(3,Number(x.s)||1));
+    return '<li><span>'+esc(x.d||'')+' · '+esc(x.p||'Gluco')+'</span><span>'+(Number(x.pct)||0)+'% '+'★'.repeat(s)+'</span></li>';
+  }).join('')+'</ul>':'';
+  var r=$('results');r.hidden=false;
+  r.innerHTML='<p class="eyebrow">Terminó el día · 20:00</p><h2 tabindex="-1">'+head+'</h2>'+
+   '<div class="stars" role="img" aria-label="'+stars+' de 3 estrellas">'+star(stars>=1)+star(stars>=2)+star(stars>=3)+'</div>'+
+   '<p>'+txt+'</p><p class="big-num">'+pct+'% <small style="font:700 1rem var(--font-body);color:var(--muted)">del día en zona verde</small></p>'+
+   '<p class="best">'+bestMsg+'</p>'+
+   (won.length?'<p class="best">🎁 ¡Ganaste: '+won.map(function(a){return a.em+' '+a.name;}).join(' y ')+'! Elegilo al empezar otro día.</p>':(nxt?'<p class="hint">⭐ Tenés '+DB.stars+' estrellas. Con '+nxt.need+' ganás: '+nxt.em+' '+nxt.name+'.</p>':''))+
+   '<p>🎯 Meta del día: '+(meals===3?'✅':'⬜')+' comer a lo largo del día · '+(pct>=70?'✅':'⬜')+' 70% en zona verde</p>'+
+   '<p>🍽️ Comidas del día: <b>'+meals+'</b>'+(meals<3?'. Para tener energía hay que comer a lo largo del día: no comer no es la manera de quedar en la zona verde.':'')+'</p>'+
+   (S.quizN?'<p>Mitos y realidades: <b>'+S.quizOk+' de '+S.quizN+'</b>'+(S.predN?' · Adivinanzas: <b>'+S.predOk+' de '+S.predN+'</b>':'')+'</p>':'')+
+   '<h3>🏅 Logros de hoy</h3><div class="chips">'+achievements(pct,meals).map(function(a){return '<span class="'+(a[2]?'':'no')+'">'+a[0]+' '+a[1]+(a[2]?' ✓':'')+'</span>';}).join('')+'</div>'+
+   '<ul class="learn">'+whatHappened().map(function(t){return '<li>'+t+'</li>';}).join('')+'</ul>'+
+   '<h3>La curva del día</h3>'+resChart()+
+   '<p class="hint">🍽️ comidas y 🔑 llaves, marcadas en el momento en que ocurrieron.</p>'+
+   '<div class="legend"><span style="--c:var(--low-soft)">Baja: menos de 70</span><span style="--c:var(--ok-soft)">Zona verde: de 70 a 180</span><span style="--c:var(--high-soft)">Alta: más de 180</span></div>'+
+   '<h3>Lo que aprendiste</h3><ul class="learn">'+tips.map(function(t){return '<li>'+t+'</li>';}).join('')+'</ul>'+
+   '<h3>💬 Para conversar</h3><p class="chat">'+chatQ()+'</p>'+
+   '<div class="row"><button class="btn sun" type="button" id="again">Jugar otro día</button><button class="btn alt" type="button" id="adultsBtn2">👪 Para adultos</button></div>'+
+   '<div class="diploma" id="diploma"><p class="eyebrow">Diploma</p><h3>Gran cuidado de '+nm+'</h3><p>Se entrega a</p>'+
+   '<div class="dname'+(DB.me?'':' empty')+'" id="dname">'+(esc(DB.me)||'Tu nombre')+'</div>'+
+   '<p>por cuidar a '+nm+' durante todo un día, con '+pct+'% del tiempo en la zona verde.</p>'+
+   '<div class="stars" aria-hidden="true">'+star(stars>=1)+star(stars>=2)+star(stars>=3)+'</div><p class="hint">'+esc(today())+'</p></div>'+
+   '<div class="field"><label class="lab" for="pname">Escribí tu nombre para el diploma</label><input type="text" id="pname" maxlength="24" autocomplete="off" placeholder="Tu nombre" value="'+esc(DB.me)+'"></div>'+
+   '<p class="hint">Para guardarlo, sacale una captura de pantalla.</p>'+
+   days;
+  $('pname').addEventListener('input',function(){
+    var v=this.value.trim().slice(0,24),d=$('dname');
+    d.textContent=v||'Tu nombre';d.classList.toggle('empty',!v);
+    rec.n=v;DB.me=v;save();
+  });
+  sfx.good();
+  if(stars===3)confetti();
+  $('again').addEventListener('click',restart);
+  $('adultsBtn2').addEventListener('click',function(){openSheet(sheet,this);});
+  try{r.scrollIntoView({block:'start',behavior:reduce?'auto':'smooth'});}catch(e){}
+}
+function restart(){
+  $('results').hidden=true;$('results').innerHTML='';
+  newGame();lastLocks=-1;curMood='';shown='';lastPulse='#';lastPct='';lastFw=-1;lastIw=-1;nxC=null;lastPos='';lastNum=-1;lastTrend='';lastSky=-1;lastZ='';lastDoor='';
+  pctEl.hidden=true;
+  openIntro();
+  try{stage.scrollIntoView({block:'start',behavior:reduce?'auto':'smooth'});}catch(e){}
+}
+
+/* ---------- bucle ---------- */
+var last=0;
+function frame(now){
+  var dt=Math.min(.1,(now-last)/1000||0);last=now;
+  if(S){
+    if(S.eatT>0)S.eatT-=dt;
+    if(S.happyT>0)S.happyT-=dt;
+    if(S.running&&!locked()){step(dt);S.idle+=dt;
+      if(S.idle>28&&!S.ended&&!S.emo&&S.g>=70&&S.g<=180&&S.eatT<=0){S.idle=-9999;fx('🥱',2);say('¡Aaah! Qué tranquilo está todo.',3500,'¡Aaah! Tranquilo.');}}
+    ui();
+  }
+  if(music&&now>=mNext){tone(NOTES[MEL[mi++%MEL.length]],1.1,'sine',.03);mNext=now+720;}
+  requestAnimationFrame(frame);
+}
+if(DB.pn)pet.name=DB.pn;
+if(COLORS.some(function(c){return c[1]===DB.pc;}))pet.color=DB.pc;
+stage.style.setProperty('--gluco',pet.color);
+$('brand').textContent=pet.name==='Gluco'?'El Día de Gluco':'El Día de '+pet.name;
+pet.acc=ACCS.some(function(a){return a.id===DB.acc&&DB.stars>=a.need;})?DB.acc:'none';
+setAcc(pet.acc);
+newGame();
+openIntro();
+ui();
+requestAnimationFrame(function(t){last=t;requestAnimationFrame(frame);});
+/* Funcionamiento sin conexión: solo cuando la página lo pide (data-sw) */
+try{if('serviceWorker' in navigator&&document.documentElement.getAttribute('data-sw')==='1'&&/^https?:$/.test(location.protocol)){navigator.serviceWorker.register('sw.js').catch(function(){});}}catch(e){}
+})();
+</script>
+</body>
+</html>

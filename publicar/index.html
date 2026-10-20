@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="es" data-sw="1">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>El Día de Gluco</title>
+<meta name="description" content="Juego educativo e interactivo sobre diabetes tipo 1 para niñas y niños: cuidá a Gluco durante un día, de 8 a 20 horas.">
+<meta name="theme-color" content="#EAF1FF">
+<meta property="og:title" content="El Día de Gluco">
+<meta property="og:description" content="Juego educativo e interactivo sobre diabetes tipo 1 para niñas y niños: cuidá a Gluco durante un día, de 8 a 20 horas.">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap">
+<link rel="stylesheet" href="style.min.css?v=4c22bd2b">
+</head>
+<body>
+<div class="app" id="app">
+  <header class="hud">
+    <div class="brand" id="brand">El Día de Gluco</div>
+    <div class="chips">
+      <span class="chip green" id="pct" hidden title="Comidas del día y tiempo en zona verde">🍽️ 0 · 🟢 0%</span>
+      <span class="chip clock" id="clock">☀️ 8:00</span>
+      <div class="menuwrap">
+        <button class="chip" id="menuBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="menu" aria-label="Menú">☰</button>
+        <div class="menu" id="menu" hidden>
+          <button class="menuitem" id="simBtn" type="button" aria-haspopup="dialog">📈 Simulador de curvas</button>
+          <button class="menuitem" id="dictBtn" type="button" aria-haspopup="dialog">📖 ¿Qué es...?</button>
+          <button class="menuitem" id="adultsBtn" type="button" aria-haspopup="dialog">👪 Para adultos</button>
+          <button class="menuitem" id="xlBtn" type="button" aria-pressed="false" title="Letra grande y textos cortos">Aa Letra grande</button>
+          <button class="menuitem" id="soundBtn" type="button" aria-label="Efectos activados. Tocá para activar la música">🔊 Efectos</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="stage" id="stage">
+    <div class="sky" aria-hidden="true"><div class="wx" id="wx"><i style="left:8%;top:5%">☁️</i><i style="left:58%;top:12%;animation-delay:-3s">☁️</i><i style="left:30%;top:2%;animation-delay:-5s;font-size:1.8rem">☁️</i></div><div class="tint" id="tint"></div><div class="starfield" id="starfield"><i style="left:12%;top:9%">✦</i><i style="left:30%;top:20%">✧</i><i style="left:52%;top:7%">✦</i><i style="left:70%;top:17%">✧</i><i style="left:88%;top:8%">✦</i><i style="left:20%;top:38%">✧</i><i style="left:82%;top:34%">✦</i></div><div class="orb" id="orb">☀️</div></div>
+    <div class="gauge">
+      <h3>Glucosa</h3>
+      <div class="tube">
+        <i class="t180">180</i><i class="t70">70</i>
+        <div class="marker" id="marker" style="bottom:30%"></div>
+      </div>
+      <div class="mini" id="mini" aria-hidden="true"><span title="Comida que se está absorbiendo">🍽️<i id="foodBar"></i></span><span title="Insulina que sigue actuando">🔑<i id="insBar"></i></span></div>
+      <div class="readout z-ok" id="readout"><b id="num">115</b><small>mg/dL</small><small id="trend" class="trend" role="img" aria-label="Tendencia: estable" title="estable">→</small><small id="trendTxt" class="trendTxt">estable</small></div>
+    </div>
+    <div class="center">
+      <div class="say" id="say" role="status" aria-live="polite">¡Hola! Soy Gluco.</div>
+      <div class="glwrap" id="glwrap">
+        <svg id="gl" viewBox="0 0 200 235" class="m-ok" role="img" aria-label="Una gota simpática con ojos grandes">
+          <ellipse class="shadow" cx="100" cy="224" rx="64" ry="9"/>
+          <g class="rig">
+            <g class="arm arm-l"><path class="limb-o" d="M40 134 Q14 146 20 170"/><path class="limb" d="M40 134 Q14 146 20 170"/></g>
+            <g class="arm arm-r"><path class="limb-o" d="M160 134 Q186 146 180 170"/><path class="limb" d="M160 134 Q186 146 180 170"/></g>
+            <ellipse class="foot" cx="78" cy="214" rx="19" ry="10"/>
+            <ellipse class="foot" cx="122" cy="214" rx="19" ry="10"/>
+            <path class="drop" d="M100 12 C100 12 32 96 32 140 A68 68 0 0 0 168 140 C168 96 100 12 100 12 Z"/>
+            <path class="shine" d="M56 140 Q58 112 76 94"/>
+            <g class="door" id="door"><rect class="door-frame" x="84" y="172" width="32" height="30" rx="7"/><rect class="door-panel" x="87" y="175" width="26" height="24" rx="4"/><circle class="door-knob" cx="108" cy="187" r="2.2"/><circle class="gdot" cx="88" cy="181" r="2.6"/><circle class="gdot" cx="88" cy="187" r="2.6" style="animation-delay:.4s"/><circle class="gdot" cx="88" cy="193" r="2.6" style="animation-delay:.8s"/><text class="dtxt" id="doorLocks" x="100" y="192"></text></g>
+            <g class="eyes">
+              <g class="eye eye-l"><ellipse class="sclera" cx="78" cy="112" rx="13" ry="15"/><g id="pupL"><circle class="pupil" cx="78" cy="114" r="7.5"/><circle class="gleam" cx="75" cy="110" r="2.6"/></g></g>
+              <g class="eye eye-r"><ellipse class="sclera" cx="122" cy="112" rx="13" ry="15"/><g id="pupR"><circle class="pupil" cx="122" cy="114" r="7.5"/><circle class="gleam" cx="119" cy="110" r="2.6"/></g></g>
+            </g>
+            <path class="eye-arc eye-sleep" d="M65 114 Q78 126 91 114"/><path class="eye-arc eye-sleep" d="M109 114 Q122 126 135 114"/>
+            <path class="eye-arc eye-happy" d="M65 120 Q78 102 91 120"/><path class="eye-arc eye-happy" d="M109 120 Q122 102 135 120"/>
+            <path class="brow" d="M63 98 L91 88"/><path class="brow" d="M137 98 L109 88"/>
+            <path class="brow2" d="M63 92 L91 102"/><path class="brow2" d="M137 92 L109 102"/>
+            <path class="tear" d="M80 130 q7 11 0 18 q-7 -7 0 -18z"/>
+            <circle class="cheek" cx="58" cy="140" r="9"/><circle class="cheek" cx="142" cy="140" r="9"/>
+            <g class="mouth mouth-ok"><path class="mf" d="M84 146 Q100 162 116 146"/></g>
+            <g class="mouth mouth-happy"><path class="mf fill" d="M78 140 Q100 178 122 140 Z"/><ellipse class="tongue" cx="100" cy="158" rx="10" ry="6"/></g>
+            <g class="mouth mouth-open"><ellipse class="mf fill" cx="100" cy="152" rx="15" ry="17"/><ellipse class="tongue" cx="100" cy="162" rx="9" ry="5"/></g>
+            <g class="mouth mouth-low"><path class="mf" d="M84 162 Q100 146 116 162"/></g>
+            <g class="mouth mouth-high"><path class="mf" d="M80 154 q7 -9 14 0 t14 0 t14 0"/></g>
+            <g class="mouth mouth-sleep"><path class="mf" d="M90 150 Q100 158 110 150"/></g>
+            <path class="sweat" d="M160 80 q10 14 0 22 q-10 -8 0 -22z"/><path class="sweat" d="M40 96 q8 12 0 19 q-8 -7 0 -19z"/>
+            <path class="spark" d="M26 60 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3z"/><path class="spark" d="M170 38 l2.5 6.5 6.5 2.5 -6.5 2.5 -2.5 6.5 -2.5 -6.5 -6.5 -2.5 6.5 -2.5z"/>
+            <g id="acc-hat" style="display:none"><circle cx="100" cy="4" r="7" fill="#FF6F83" stroke="var(--line)" stroke-width="4"/><path d="M78 40 Q80 8 100 8 Q120 8 122 40 Z" fill="#FF6F83" stroke="var(--line)" stroke-width="4" stroke-linejoin="round"/><rect x="72" y="36" width="56" height="12" rx="6" fill="#FFE9C2" stroke="var(--line)" stroke-width="4"/></g>
+            <g id="acc-glasses" style="display:none"><circle cx="78" cy="112" r="19" fill="#fff" fill-opacity=".25" stroke="var(--line)" stroke-width="4"/><circle cx="122" cy="112" r="19" fill="#fff" fill-opacity=".25" stroke="var(--line)" stroke-width="4"/><path d="M96 108 Q100 103 104 108" fill="none" stroke="var(--line)" stroke-width="4" stroke-linecap="round"/></g>
+            <g id="acc-bow" style="display:none"><path d="M100 26 L76 12 L76 40 Z M100 26 L124 12 L124 40 Z" fill="#FF8CC6" stroke="var(--line)" stroke-width="4" stroke-linejoin="round"/><circle cx="100" cy="26" r="7" fill="#FF6F83" stroke="var(--line)" stroke-width="4"/></g>
+            <g id="acc-party" style="display:none"><path d="M80 40 L100 -6 L120 40 Z" fill="#7C5CE6" stroke="var(--line)" stroke-width="4" stroke-linejoin="round"/><circle cx="100" cy="-6" r="6" fill="var(--sun)" stroke="var(--line)" stroke-width="3"/><circle cx="96" cy="22" r="3" fill="#FFC93C"/><circle cx="106" cy="30" r="3" fill="#7FD9A8"/></g>
+            <g id="acc-star" style="display:none"><text x="100" y="34" text-anchor="middle" font-size="44">⭐</text></g>
+            <g id="acc-crown" style="display:none"><path d="M76 40 L80 12 L92 26 L100 4 L108 26 L120 12 L124 40 Z" fill="var(--sun)" stroke="var(--line)" stroke-width="4" stroke-linejoin="round"/></g>
+            <text class="zzz" x="140" y="70">z</text><text class="zzz" x="156" y="48" style="animation-delay:.8s">z</text>
+          </g>
+        </svg>
+        <div class="thought" id="thought" hidden aria-hidden="true"></div>
+        <div class="ball" aria-hidden="true">⚽</div>
+      </div>
+    </div>
+    <div class="overlay" id="overlay" hidden></div>
+  </section>
+
+  <section class="tray" id="tray" aria-label="Cosas para darle a Gluco">
+    <div class="shelf">
+      <h3>Comidas<span class="slidehint"> · deslizá para ver más</span></h3>
+      <div class="strip">
+        <button class="arrow" id="prev" type="button" aria-label="Ver comidas anteriores">‹</button>
+        <div class="scroller" id="scroller">
+          <button class="item" type="button" data-id="water"><span class="em">💧</span><span class="lb">Agua</span></button>
+          <button class="item" type="button" data-id="apple"><span class="em">🍎</span><span class="lb">Manzana</span></button>
+          <button class="item" type="button" data-id="banana"><span class="em">🍌</span><span class="lb">Banana</span></button>
+          <button class="item" type="button" data-id="yogurt"><span class="em">🥣</span><span class="lb">Yogur con avena</span></button>
+          <button class="item" type="button" data-id="milk"><span class="em">🥛</span><span class="lb">Leche y pan integral</span></button>
+          <button class="item" type="button" data-id="chicken"><span class="em">🍗</span><span class="lb">Pollo con ensalada</span></button>
+          <button class="item" type="button" data-id="pasta"><span class="em">🍝</span><span class="lb">Fideos con salsa</span></button>
+          <button class="item" type="button" data-id="pizza"><span class="em">🍕</span><span class="lb">Pizza</span></button>
+          <button class="item" type="button" data-id="cookie"><span class="em">🍪</span><span class="lb">Galletitas rellenas</span></button>
+          <button class="item" type="button" data-id="alfajor"><span class="em">🍫</span><span class="lb">Alfajor</span></button>
+          <button class="item" type="button" data-id="cake"><span class="em">🍰</span><span class="lb">Torta</span></button>
+          <button class="item" type="button" data-id="soda"><span class="em">🥤</span><span class="lb">Gaseosa</span></button>
+        </div>
+        <button class="arrow" id="next" type="button" aria-label="Ver más comidas">›</button>
+      </div>
+    </div>
+    <div class="shelf">
+      <h3>Siempre a mano</h3>
+      <div class="tools">
+        <button class="item tool" type="button" data-id="key"><span class="badge" id="keyBadge">0</span><span class="em">🔑</span><span class="lb">Llave de insulina</span></button>
+        <button class="item tool" type="button" data-id="ball"><span class="em">⚽</span><span class="lb">Pelota</span></button>
+        <button class="item tool" type="button" data-id="juice"><span class="em">🧃</span><span class="lb">Jugo</span></button>
+        <button class="item tool" type="button" data-id="sugar"><span class="em">🍬</span><span class="lb">Azúcar</span></button>
+      </div>
+    </div>
+    <p class="hint">Arrastrá hasta Gluco, o tocá. Velocidad de subida: <span class="legend2"><i class="dot g-low"></i> despacio <i class="dot g-med"></i> normal <i class="dot g-fast"></i> rápido <i class="dot g-late"></i> tarde</span></p>
+  </section>
+
+  <section class="card" id="results" hidden></section>
+  <p class="note">Este juego es para aprender y divertirse. Para el cuidado de cada persona valen siempre las indicaciones de su médico o médica.</p>
+</div>
+
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetT" hidden>
+  <div class="ocard">
+    <h2 id="sheetT">Para adultos</h2>
+    <p>Es una simulación sencilla para conversar sobre diabetes con niñas y niños. Un día de juego dura unos 5 a 7 minutos y se pausa mientras está abierta esta pantalla.</p>
+    <h3>Qué se aprende jugando</h3>
+    <ul>
+      <li>La glucosa es la energía del cuerpo. La insulina es como una llave que la deja entrar a las células.</li>
+      <li>En el juego, la zona verde va de 70 a 180 mg/dL. Por debajo hablamos de glucosa baja (hipoglucemia) y por encima, de glucosa alta (hiperglucemia).</li>
+      <li>Cada comida tiene una velocidad de subida, según su índice glucémico: alto (gaseosa, dulces, sube de golpe), medio (fideos, pizza) o bajo (fruta, avena, pan integral, sube de a poco). En el juego se ve con un punto de color en cada comida.</li>
+      <li>Las comidas con mucha azúcar suben rápido y después pueden bajar de golpe (rebote). Las que tienen grasa, como la pizza, suben más tarde y más despacio.</li>
+      <li>Comer poco no es una manera de quedar en zona verde: el juego pide comer a lo largo del día (comidas principales y colaciones). Si hay poco apetito, se conversa con el equipo de salud.</li>
+      <li>Cada día pasa una situación (gimnasia, cumpleaños o resfrío) y a la hora de comer puede faltarle el apetito: conviene conversar qué haríamos en cada caso.</li>
+      <li>Las emociones fuertes, como la tristeza o el enojo, también pueden mover la glucosa. Contar lo que pasa ayuda.</li>
+      <li>La insulina del juego actúa con una curva: empieza a los pocos minutos, tiene su mayor efecto después de un par de horas y sigue varias horas. Es una ilustración, no una pauta de dosis. Una glucosa baja nunca se corrige con insulina: se corrige con algo dulce.</li>
+      <li>Cada comida tiene su velocidad, su pico y su duración. Se pueden comparar en el simulador de curvas del menú.</li>
+      <li>Durante el día aparecen preguntas de mito o realidad y adivinanzas sobre cómo sube la glucosa. Al final hay logros, la curva del día con las comidas y llaves marcadas, y una pregunta para conversar en familia o en clase.</li>
+      <li>Moverse la baja. Si baja de más, se corrige con algo dulce y se avisa a un adulto.</li>
+      <li>La diabetes no se contagia, no se causa por comer dulces y no impide jugar ni hacer deporte.</li>
+    </ul>
+    <h3>Para conversar después de jugar</h3>
+    <ol>
+      <li>¿Qué le pasó al personaje cuando comió la gaseosa o la torta? ¿Y con la manzana?</li>
+      <li>¿Cómo se sintió cuando su glucosa estuvo baja? ¿Qué hiciste para ayudarlo?</li>
+      <li>¿Para qué sirve la llave? ¿Qué pasa si las cerraduras quedan cerradas?</li>
+      <li>Si un amigo se marea y transpira, ¿qué podemos hacer?</li>
+      <li>¿Qué hacés cuando te sentís triste o enojado? ¿Se lo contás a alguien?</li>
+    </ol>
+    <p class="small"><b>Importante:</b> los tiempos, las cantidades y las llaves del juego están simplificados y no son dosis reales. Los objetivos y el tratamiento de cada niño o niña los define su equipo de salud. Los datos del juego se guardan solo en este dispositivo.</p>
+    <button class="btn sun" type="button" id="sheetClose" data-close>Volver al juego</button>
+  </div>
+</div>
+
+<div class="sheet" id="sim" role="dialog" aria-modal="true" aria-labelledby="simT" hidden>
+  <div class="ocard">
+    <h2 id="simT">Simulador de curvas</h2>
+    <p>Elegí una comida y mirá cómo cambia la forma de la curva. Podés sumar la insulina rápida ilustrativa.</p>
+    <div class="opts" role="radiogroup" aria-label="Comida" id="simFoods"></div>
+    <button class="opt" id="simIns" type="button" aria-pressed="false">🔑 Mostrar insulina rápida</button>
+    <div id="simChart"></div>
+    <p class="small" id="simInfo"></p>
+    <p class="small">La forma de la curva muestra la <b>velocidad</b>; su altura depende de la <b>cantidad</b> de hidratos de carbono de la porción.</p>
+    <p class="small"><b>Importante:</b> las cifras y curvas son ficticias, solo sirven para comparar patrones. No permiten estimar glucosa futura, dosis, horarios de inyección ni riesgo personal de glucosa baja.</p>
+    <button class="btn sun" type="button" data-close>Volver al juego</button>
+  </div>
+</div>
+
+<div class="sheet" id="dict" role="dialog" aria-modal="true" aria-labelledby="dictT" hidden>
+  <div class="ocard">
+    <h2 id="dictT">¿Qué es...?</h2>
+    <dl>
+      <dt>Glucosa</dt><dd>Es el azúcar de la sangre. Le da energía a todo el cuerpo.</dd>
+      <dt>Insulina</dt><dd>Es como una llave: abre las puertas de las células para que la glucosa entre.</dd>
+      <dt>Diabetes</dt><dd>Es cuando el cuerpo no puede mantener la glucosa en equilibrio solo. Con cuidados, se puede jugar, estudiar y hacer deporte. No se contagia.</dd>
+      <dt>Velocidad de subida</dt><dd>Cada comida sube la glucosa distinto: verde es despacio, naranja normal, rojo rápido y violeta tarde y por más tiempo. A esto los adultos le llaman índice glucémico.</dd>
+      <dt>Velocidad y cantidad</dt><dd>La velocidad (índice glucémico) dice qué tan rápido sube la glucosa. La cantidad de hidratos de carbono dice cuánto sube en total. Una comida puede subir despacio pero mucho, o rápido pero poco. La grasa y la proteína también pueden retrasar la subida.</dd>
+      <dt>Insulina activa</dt><dd>La insulina no baja la glucosa de golpe: empieza a trabajar, hace su mayor efecto un par de horas después y sigue varias horas. Por eso dos llaves cercanas se suman.</dd>
+      <dt>Flecha de tendencia</dt><dd>Debajo del número muestra si la glucosa está subiendo, bajando o estable en los últimos minutos.</dd>
+      <dt>Días de enfermedad</dt><dd>Cuando estamos enfermos la glucosa puede subir. Se toma agua y se avisa a un adulto.</dd>
+      <dt>Rebote</dt><dd>Con mucha azúcar la glucosa sube rápido y después puede bajar de golpe. Por eso hay que volver a mirar el nivel.</dd>
+      <dt>Grasa</dt><dd>Hace que la comida suba la glucosa más tarde y más despacio.</dd>
+      <dt>Zona verde</dt><dd>Es el nivel de glucosa que queremos en el juego: entre 70 y 180.</dd>
+      <dt>Glucosa baja</dt><dd>Es cuando hay poca glucosa. Da temblor, sudor y sueño. Se arregla con algo dulce y avisando a un adulto.</dd>
+      <dt>Glucosa alta</dt><dd>Es cuando hay demasiada glucosa. Moverse y avisar a un adulto ayuda.</dd>
+      <dt>Hidratos de carbono</dt><dd>Están en el pan, los fideos, las frutas y los dulces. Son los que más hacen subir la glucosa.</dd>
+    </dl>
+    <button class="btn sun" type="button" data-close>Volver al juego</button>
+  </div>
+</div>
+<script src="game.min.js?v=4c22bd2b"></script>
+</body>
+</html>

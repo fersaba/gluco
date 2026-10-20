@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Gluco, una gota sonriente">
+  <rect width="128" height="128" rx="28" fill="#EAF1FF"/>
+  <path d="M64 14 C64 14 28 54 28 82 C28 102 44 114 64 114 C84 114 100 102 100 82 C100 54 64 14 64 14 Z" fill="#7DB5FF" stroke="#16204A" stroke-width="6" stroke-linejoin="round"/>
+  <circle cx="52" cy="74" r="7" fill="#fff" stroke="#16204A" stroke-width="3"/><circle cx="76" cy="74" r="7" fill="#fff" stroke="#16204A" stroke-width="3"/>
+  <circle cx="53" cy="75" r="3.5" fill="#16204A"/><circle cx="77" cy="75" r="3.5" fill="#16204A"/>
+  <path d="M52 92 Q64 102 76 92" fill="none" stroke="#16204A" stroke-width="4" stroke-linecap="round"/>
+</svg>

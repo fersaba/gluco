@@ -1,2 +1,7 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+* text=auto eol=lf
+*.png binary
+dist/*.html linguist-generated=true
+assets/*.min.* linguist-generated=true
+sw.js linguist-generated=true
+index.html linguist-generated=true
+docs/hoja-imprimible.html linguist-generated=true
